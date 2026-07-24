@@ -1,0 +1,7 @@
+# Only TypeScript packages are pnpm workspace members.
+# Go services (services/*) and the Java SDK (sdks/java) are polyglot —
+# orchestrated by turbo via shell tasks, not managed by pnpm.
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'sdks/node'
