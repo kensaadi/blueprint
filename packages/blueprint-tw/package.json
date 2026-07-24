@@ -1,0 +1,50 @@
+{
+  "name": "@dashforge/blueprint-tw",
+  "version": "0.0.0",
+  "description": "Blueprint Tailwind flavor pack — atom bindings that render the contract with @dashforge/tw components.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@dashforge/blueprint-core": "workspace:*",
+    "@dashforge/blueprint-runtime": "workspace:*",
+    "@dashforge/forms": "^1.0.0",
+    "@dashforge/rbac": "^1.0.0",
+    "@dashforge/tw": "^1.1.1",
+    "@hookform/resolvers": "^5.4.0",
+    "react-hook-form": "^7.80.0"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tsup": "^8.0.0",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.9",
+    "zod": "^4.4.3"
+  }
+}

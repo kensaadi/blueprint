@@ -1,0 +1,57 @@
+{
+  "name": "@dashforge/blueprint-mui",
+  "version": "0.0.0",
+  "description": "Blueprint MUI flavor pack — atom bindings that render the contract with @mui/material + @dashforge/ui components.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run --passWithNoTests",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "@dashforge/blueprint-core": "workspace:*",
+    "@dashforge/blueprint-runtime": "workspace:*",
+    "@dashforge/forms": "^1.0.0",
+    "@dashforge/rbac": "^1.0.0",
+    "@dashforge/theme-core": "1.0.0",
+    "@dashforge/ui": "1.0.0",
+    "@hookform/resolvers": "^5.4.0",
+    "react-hook-form": "^7.80.0"
+  },
+  "peerDependencies": {
+    "@emotion/react": "^11",
+    "@emotion/styled": "^11",
+    "@mui/material": "^9",
+    "react": ">=19",
+    "react-dom": ">=19",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@emotion/react": "^11.0.0",
+    "@emotion/styled": "^11.0.0",
+    "@mui/material": "^9.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "tsup": "^8.0.0",
+    "typescript": "~6.0.2",
+    "vitest": "^4.1.9",
+    "zod": "^4.4.3"
+  }
+}

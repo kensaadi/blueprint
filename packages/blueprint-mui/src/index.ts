@@ -1,0 +1,1 @@
+export { muiRegistry } from './registry';

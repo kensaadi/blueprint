@@ -11,14 +11,24 @@
   },
   "scripts": {
     "build": "turbo build",
-    "test": "turbo test",
+    "test": "turbo run test --concurrency=1",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "dev": "turbo dev"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.12.3",
+    "eslint": "^10.3.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.6.0",
     "turbo": "2.10.6",
     "typescript": "~6.0.2",
-    "@types/node": "^24.12.3"
+    "typescript-eslint": "^8.59.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

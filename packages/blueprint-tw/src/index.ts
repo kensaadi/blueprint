@@ -1,0 +1,1 @@
+export { twRegistry } from './registry';
