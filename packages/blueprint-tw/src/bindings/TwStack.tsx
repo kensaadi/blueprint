@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Stack, Box } from '@dashforge/tw';
 import type { SpacingToken } from '@dashforge/blueprint-core';
-import { SPACING_STEP } from '../tokens';
+import { SPACING_STEP, toStackGap } from '../tokens';
 
 type Props = {
   direction?: 'row' | 'column';
@@ -43,7 +43,7 @@ export function TwStack({
   const stack = (
     <Stack
       direction={direction === 'row' ? 'row' : 'col'}
-      gap={spacing !== undefined ? SPACING_STEP[spacing] : 4}
+      gap={spacing !== undefined ? toStackGap(SPACING_STEP[spacing]) : 4}
       align={effectiveAlign}
       justify={justify}
       sx={extraClasses || undefined}
