@@ -29,6 +29,9 @@ import { iconForType } from '../data/typeIcons';
 import { isAtomName } from '@dashforge/blueprint-core';
 import { TEMPLATES } from '../templates/library';
 import { RecentFilesGrid } from './RecentFilesGrid';
+import { MarketplaceCarousel } from './MarketplaceCarousel';
+import { PlansPanel } from './PlansPanel';
+import { LicenseBar } from './LicenseBar';
 
 /** Types recognised as containers — they render an inner drop area. */
 const CONTAINER_TYPES = new Set([
@@ -76,9 +79,12 @@ export function CanvasPanel() {
       <div className="mx-auto max-w-3xl">
         {contract.root === null ? (
           <>
+            <PlansPanel />
             <RootDropZone />
             <RecentFilesGrid />
             <TemplatePicker />
+            <MarketplaceCarousel />
+            <LicenseBar />
           </>
         ) : (
           <NodeCard
@@ -108,36 +114,35 @@ function RootDropZone() {
   return (
     <div
       ref={setNodeRef}
-      className="flex min-h-[420px] w-full flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors"
+      className="flex min-h-[128px] w-full flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 transition-colors"
       style={{
         borderColor: isOver ? 'var(--bd-accent)' : 'var(--bd-border-strong)',
         background: isOver ? 'var(--bd-accent-bg)' : 'transparent',
       }}
     >
       <div
-        className="mb-4 flex h-16 w-16 items-center justify-center rounded-full"
+        className="mb-2 flex h-10 w-10 items-center justify-center rounded-full"
         style={{ background: 'var(--bd-accent-bg)' }}
       >
         <i
-          className="ti ti-arrow-down-to-arc text-[32px]"
+          className="ti ti-arrow-down-to-arc text-[20px]"
           style={{ color: 'var(--bd-accent)' }}
           aria-hidden
         />
       </div>
       <Typography
         variant="body1"
-        sx="text-[18px] font-medium"
+        sx="text-[16px] font-medium"
         style={{ color: 'var(--bd-text)' }}
       >
         Drop any atom to start
       </Typography>
       <Typography
         variant="caption"
-        sx="mt-2 max-w-md text-center text-[14px] leading-relaxed"
+        sx="mt-1 max-w-md text-center text-[13px] leading-relaxed"
         style={{ color: 'var(--bd-text-soft)' }}
       >
-        The first atom becomes the root. It can be a form, a page, a stack
-        — whatever your contract needs to describe.
+        The first atom becomes the root — a form, a page, a stack.
       </Typography>
     </div>
   );

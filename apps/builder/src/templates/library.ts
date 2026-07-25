@@ -16,11 +16,25 @@ import type { Contract } from '../state/types';
 // grid — it exists purely as a testing artefact for the round-trip
 // snapshot suite (see `src/builder/state/roundTrip.test.ts`).
 
+/**
+ * Where a template comes from. Drives which lane it appears in on the
+ * Dashboard start area:
+ *   - `builtin`     → the curated quick-start set shipped with the Builder
+ *   - `customer`    → contracts the user saved as their own template
+ *   - `marketplace` → free/paid templates from the in-Builder Store
+ *
+ * Source is independent of pricing/ownership: a `marketplace` template
+ * may be free or paid, and being paid never depends on the user's tier
+ * (Decision #37 — see `licensing/entitlements.tsx`).
+ */
+export type TemplateSource = 'builtin' | 'customer' | 'marketplace';
+
 export type Template = {
   id: string;
   name: string;
   description: string;
   icon: string;
+  source: TemplateSource;
   contract: Contract;
 };
 
@@ -29,7 +43,7 @@ function n(id: string): string {
   return 'tpl_' + id;
 }
 
-const LOGIN: Contract = {
+export const LOGIN: Contract = {
   version: '1.0',
   root: {
     id: 'login',
@@ -89,7 +103,7 @@ const LOGIN: Contract = {
   } as Contract['root'],
 };
 
-const KYC: Contract = {
+export const KYC: Contract = {
   version: '1.0',
   root: {
     id: 'kyc',
@@ -173,7 +187,7 @@ const KYC: Contract = {
  * can be any container atom, and marketing / dashboard-style pages
  * compose from the same 36 atoms as forms do.
  */
-const LANDING: Contract = {
+export const LANDING: Contract = {
   version: '1.0',
   root: {
     id: 'landing',
@@ -405,7 +419,7 @@ const LANDING: Contract = {
   } as Contract['root'],
 };
 
-const CHECKOUT: Contract = {
+export const CHECKOUT: Contract = {
   version: '1.0',
   root: {
     id: 'checkout',
@@ -507,6 +521,7 @@ export const TEMPLATES: Template[] = [
     name: 'Sign in',
     description: 'Email + password with remember-me and a submit button.',
     icon: 'login',
+    source: 'builtin',
     contract: LOGIN,
   },
   {
@@ -515,6 +530,7 @@ export const TEMPLATES: Template[] = [
     description:
       'Name, birth date, country, and a tax ID that only appears when Country = Italy.',
     icon: 'user-check',
+    source: 'builtin',
     contract: KYC,
   },
   {
@@ -523,6 +539,7 @@ export const TEMPLATES: Template[] = [
     description:
       'Shipping address, payment method selector with card fields shown only when card is chosen.',
     icon: 'shopping-cart',
+    source: 'builtin',
     contract: CHECKOUT,
   },
   {
@@ -531,6 +548,7 @@ export const TEMPLATES: Template[] = [
     description:
       'Non-form page — hero, three-feature grid, FAQ accordion, footer. Proof that the contract fits marketing pages too.',
     icon: 'world',
+    source: 'builtin',
     contract: LANDING,
   },
 ];

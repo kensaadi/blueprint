@@ -247,3 +247,24 @@
 @media (prefers-reduced-motion: reduce) {
   [data-app='builder'] .bd-flash { animation: none; }
 }
+
+/*
+ * Marketplace carousel — a self-travelling marquee. The track holds two
+ * identical copies of the card list; translating by -50% lands exactly
+ * one copy over, so the loop is seamless. Hover pauses it (cards stay
+ * clickable), and reduced-motion stops it entirely.
+ */
+@keyframes bd-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+[data-app='builder'] .bd-marquee {
+  animation: bd-marquee 30s linear infinite;
+  will-change: transform;
+}
+[data-app='builder'] .bd-marquee:hover {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-app='builder'] .bd-marquee { animation: none; }
+}

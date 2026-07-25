@@ -14,11 +14,22 @@ import { DashforgeTailwindProvider } from '@dashforge/tw-theme';
 import './index.css';
 import './theme/tokens.css';
 import { BuilderApp } from './App';
+import { LicenseProvider } from './licensing/LicenseContext';
+import { EntitlementsProvider } from './licensing/entitlements';
 
+// Scaffolding defaults: no license token → Community tier; no purchased
+// templates → empty entitlements. Both are the two orthogonal axes of
+// the commercial model (Decision #37) — tier gates Builder features,
+// entitlements gate template ownership, and they never cross. The real
+// token decode + persisted purchases replace these props later.
 createRoot(document.getElementById('builder-root')!).render(
   <StrictMode>
     <DashforgeTailwindProvider>
-      <BuilderApp />
+      <LicenseProvider>
+        <EntitlementsProvider>
+          <BuilderApp />
+        </EntitlementsProvider>
+      </LicenseProvider>
     </DashforgeTailwindProvider>
   </StrictMode>,
 );

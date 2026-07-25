@@ -30,6 +30,7 @@ import { useFileOps } from './hooks/useFileOps';
 import { useValidation } from './state/useValidation';
 import { useBuilderState, useBuilderDispatch, useBuilderFileDirty } from './state/BuilderStateContext';
 import { CollapseProvider } from './state/CollapseContext';
+import { MarketplaceTabProvider } from './state/MarketplaceTabContext';
 import { ConfirmDialog } from './primitives/ConfirmDialog';
 import { downloadContract } from './state/exportContract';
 import { pickAndParseContract } from './state/importContract';
@@ -38,7 +39,7 @@ import type { ValidationState } from './shell/StatusChip';
 import { BuilderHeader } from './shell/BuilderHeader';
 import { StatusBar } from './shell/StatusBar';
 import { PalettePanel } from './panels/PalettePanel';
-import { CanvasPanel } from './panels/CanvasPanel';
+import { CenterArea } from './panels/CenterArea';
 import { InspectorPanel } from './panels/InspectorPanel';
 import { SourceDrawer } from './panels/SourceDrawer';
 import { CommandPalette, type PaletteMode } from './commands/CommandPalette';
@@ -51,7 +52,9 @@ type Theme = 'dark' | 'light';
 
 export function BuilderApp() {
   const [theme, setTheme] = useState<Theme>('light');
-  const [sourceOpen, setSourceOpen] = useState(true);
+  // Source drawer starts collapsed to give the canvas full height; the
+  // user raises it via the header "Source" toggle (or ⌘E / Cmd+K).
+  const [sourceOpen, setSourceOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [paletteMode, setPaletteMode] = useState<PaletteMode>('all');
   const [browserOpen, setBrowserOpen] = useState(false);
@@ -77,6 +80,7 @@ export function BuilderApp() {
   return (
     <BuilderStateProvider>
     <CollapseProvider>
+    <MarketplaceTabProvider>
     <DialogFlowProvider>
     <SaveAsFlowProvider>
     <DndProvider>
@@ -134,7 +138,7 @@ export function BuilderApp() {
       }}
     >
       <BuilderErrorBoundary>
-        <CanvasPanel />
+        <CenterArea />
         <InspectorPanel />
       </BuilderErrorBoundary>
     </AppShell>
@@ -142,6 +146,7 @@ export function BuilderApp() {
     </DndProvider>
     </SaveAsFlowProvider>
     </DialogFlowProvider>
+    </MarketplaceTabProvider>
     </CollapseProvider>
     </BuilderStateProvider>
   );
