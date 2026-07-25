@@ -1,0 +1,249 @@
+/**
+ * Builder V2 — Theme A tokens (Premium dev tool, Linear / Cursor inspired)
+ *
+ * Dark variant is the default. Light variant activates when the root
+ * <html> has data-theme="light".
+ *
+ * These tokens skin the Builder UI specifically. They do NOT override
+ * @dashforge/tw's product theme — they live alongside, scoped under
+ * `[data-app="builder"]`. The learn app at index.html is untouched.
+ */
+
+[data-app='builder'][data-theme='dark'] {
+  /* Surfaces */
+  --bd-canvas: #0a0a0b;
+  --bd-panel: #111114;
+  --bd-header: #050505;
+  --bd-source: #07070a;
+  --bd-status: #050505;
+
+  /* Borders and dividers */
+  --bd-border: #1f1f23;
+  --bd-border-strong: #2a2a30;
+
+  /* Text */
+  --bd-text: #fafafa;
+  --bd-text-soft: #a1a1aa;
+  --bd-text-faint: #52525b;
+
+  /* Accent */
+  --bd-accent: #818cf8;
+  --bd-accent-fg: #0a0a0b;
+  --bd-accent-bg: rgb(129 140 248 / 0.14);
+  --bd-accent-ring: rgb(129 140 248 / 0.4);
+
+  /* Semantics */
+  --bd-success: #86efac;
+  --bd-success-bg: rgb(74 222 128 / 0.1);
+  --bd-warning: #fcd34d;
+  --bd-warning-bg: rgb(252 211 77 / 0.1);
+  --bd-modified: #818cf8;
+  --bd-modified-bg: rgb(129 140 248 / 0.1);
+
+  /* Interactive items (palette chips, drag targets) */
+  --bd-item: #18181c;
+  --bd-item-border: #27272a;
+  --bd-item-hover: #1e1e23;
+  --bd-item-hover-border: #3f3f46;
+  --bd-item-active: rgb(129 140 248 / 0.18);
+
+  /* Wireframe / canvas */
+  --bd-wire: #2a2a30;
+  --bd-wire-strong: #3f3f46;
+  --bd-wire-bg: #0d0d10;
+  --bd-grid-line: rgba(255, 255, 255, 0.02);
+
+  /* Syntax highlighting */
+  --bd-syntax-k: #c4b5fd;
+  --bd-syntax-s: #6ee7b7;
+  --bd-syntax-n: #fcd34d;
+  --bd-syntax-line: rgba(255, 255, 255, 0.04);
+}
+
+[data-app='builder'][data-theme='light'] {
+  --bd-canvas: #ffffff;
+  --bd-panel: #fafafa;
+  --bd-header: #ffffff;
+  --bd-source: #fafafa;
+  --bd-status: #ffffff;
+
+  --bd-border: #ececef;
+  --bd-border-strong: #d4d4d8;
+
+  --bd-text: #18181b;
+  --bd-text-soft: #71717a;
+  --bd-text-faint: #a1a1aa;
+
+  --bd-accent: #6366f1;
+  --bd-accent-fg: #ffffff;
+  --bd-accent-bg: rgb(99 102 241 / 0.08);
+  --bd-accent-ring: rgb(99 102 241 / 0.3);
+
+  --bd-success: #15803d;
+  --bd-success-bg: rgb(22 163 74 / 0.08);
+  --bd-warning: #b45309;
+  --bd-warning-bg: rgb(180 83 9 / 0.08);
+  --bd-modified: #6366f1;
+  --bd-modified-bg: rgb(99 102 241 / 0.08);
+
+  --bd-item: #ffffff;
+  --bd-item-border: #e4e4e7;
+  --bd-item-hover: #f4f4f5;
+  --bd-item-hover-border: #d4d4d8;
+  --bd-item-active: rgb(99 102 241 / 0.1);
+
+  --bd-wire: #d4d4d8;
+  --bd-wire-strong: #a1a1aa;
+  --bd-wire-bg: #fafafa;
+  --bd-grid-line: rgba(0, 0, 0, 0.03);
+
+  --bd-syntax-k: #6d28d9;
+  --bd-syntax-s: #047857;
+  --bd-syntax-n: #b45309;
+  --bd-syntax-line: rgba(0, 0, 0, 0.04);
+}
+
+[data-app='builder'] {
+  background: var(--bd-canvas);
+  color: var(--bd-text);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  /*
+   * Lock the viewport: builder is a single-screen app, never scrolls
+   * at the document level. Internal panels (palette / canvas / inspector /
+   * source) own their own scrollbars.
+   */
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Subtle grid for the canvas surface — looks like a work plane, not a black hole */
+[data-app='builder'] .bd-grid {
+  background-image:
+    linear-gradient(var(--bd-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--bd-grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/*
+ * Palette accordion category header — the trigger button ships with a
+ * hardcoded reset that ignores both external padding rules and inline
+ * `style="padding"`. So we push the chevron inward via margin on the
+ * SVG (which the reset leaves alone) and give the row a bit of vertical
+ * breathing room so the header height matches its atom-item neighbours.
+ * Scoped to the palette so no other Accordion (Landing FAQ, DemoAppPage
+ * FAQ, KitchenSink) is affected.
+ */
+[data-app='builder'] [aria-label='Atom palette'] button[aria-expanded] > svg {
+  margin-right: 12px;
+}
+[data-app='builder'] [aria-label='Atom palette'] h3 {
+  padding: 4px 0;
+}
+
+/* Palette item hover effect — tactile, slight lift, no shadow */
+[data-app='builder'] .bd-item {
+  background: var(--bd-item);
+  border: 1px solid var(--bd-item-border);
+  color: var(--bd-text);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+[data-app='builder'] .bd-item:hover {
+  background: var(--bd-item-hover);
+  border-color: var(--bd-item-hover-border);
+}
+[data-app='builder'] .bd-item:active {
+  transform: translateY(1px);
+}
+[data-app='builder'] .bd-item:focus-visible {
+  outline: 2px solid var(--bd-accent-ring);
+  outline-offset: 2px;
+}
+
+/*
+ * Custom scrollbars — thinner, theme-aware, hover-emphasized.
+ *
+ * Defaults are platform-grey and visually heavy. Scoped here to the
+ * builder app so we don't change scrollbars across the rest of the
+ * sandbox. Firefox gets `scrollbar-*`; WebKit/Blink get the
+ * ::-webkit-scrollbar pseudo-elements.
+ */
+[data-app='builder'] * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bd-border-strong) transparent;
+}
+[data-app='builder'] *::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+[data-app='builder'] *::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-app='builder'] *::-webkit-scrollbar-thumb {
+  background: var(--bd-border-strong);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+[data-app='builder'] *::-webkit-scrollbar-thumb:hover {
+  background: var(--bd-text-faint);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+[data-app='builder'] *::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/*
+ * Override @dashforge/tw <Accordion> light-mode hardcoded classes.
+ *
+ * G-22: Accordion item wrapper hardcodes `border-neutral-200` and its
+ * content/trigger use `text-neutral-700` / `text-neutral-500`. None of
+ * those react to a dark theme — in dark mode the dividers blow out to
+ * near-white and content text becomes unreadable. Theme tokens are
+ * never consulted. Proposal: `slotProps` for accordion borders, or
+ * better, theme-aware default classes (e.g. `dark:border-neutral-800`).
+ * Until then, scoped overrides on `[data-app='builder']` keep the
+ * palette readable in dark mode.
+ */
+[data-app='builder'] .border-neutral-200 { border-color: var(--bd-border) !important; }
+[data-app='builder'] .text-neutral-700 { color: var(--bd-text) !important; }
+[data-app='builder'] .text-neutral-500 { color: var(--bd-text-soft) !important; }
+[data-app='builder'] .text-neutral-400 { color: var(--bd-text-faint) !important; }
+
+/* Source drawer — line-by-line background bands */
+[data-app='builder'] .bd-source pre {
+  counter-reset: ln;
+}
+[data-app='builder'] .bd-source-line {
+  display: block;
+  padding-left: 3.5rem;
+  position: relative;
+}
+[data-app='builder'] .bd-source-line::before {
+  counter-increment: ln;
+  content: counter(ln);
+  position: absolute;
+  left: 0;
+  width: 2.5rem;
+  text-align: right;
+  color: var(--bd-text-faint);
+  user-select: none;
+}
+
+/*
+ * Node-card selection flash. Fired on every false → true selection
+ * transition — the palette handoff feels magical this way. Short
+ * enough (<1s) not to become distracting on canvas clicks either.
+ */
+@keyframes bd-node-flash {
+  0%   { box-shadow: 0 0 0 0 var(--bd-accent); background-color: var(--bd-accent-bg); }
+  60%  { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; background-color: transparent; }
+}
+[data-app='builder'] .bd-flash {
+  animation: bd-node-flash 700ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-app='builder'] .bd-flash { animation: none; }
+}

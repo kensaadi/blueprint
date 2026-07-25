@@ -33,3 +33,6 @@ sdks/java/.gradle/
 .env
 .env.local
 .env.*.local
+
+# Claude Code local dev config
+.claude/

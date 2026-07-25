@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root, #builder-root {
+  height: 100%;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Builder app is single-screen — never overflow at the document level. */
+html[data-app='builder'], html[data-app='builder'] body, #builder-root {
+  overflow: hidden;
+  height: 100vh;
+}
