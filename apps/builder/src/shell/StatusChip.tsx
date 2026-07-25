@@ -20,7 +20,7 @@ export type ValidationState =
 
 export function StatusChip({ state }: { state: ValidationState }) {
   if (state.kind === 'empty') {
-    return <Chip label="empty" variant="soft" color="neutral" size="sm" />;
+    return <Chip label="empty" variant="soft" color="secondary" size="sm" />;
   }
   if (state.kind === 'valid') {
     return <Chip label="✓ valid" variant="soft" color="success" size="sm" />;

@@ -665,7 +665,7 @@ function JsonEditor({
       {hint && (
         <Typography
           variant="caption"
-          className="text-[11px] leading-snug"
+          sx="text-[11px] leading-snug"
           style={{ color: 'var(--bd-text-faint)' }}
         >
           {hint}

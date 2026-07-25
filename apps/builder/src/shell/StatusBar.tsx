@@ -90,7 +90,7 @@ function StatusItem({
   return (
     <div className="flex items-center gap-1.5">
       <i className={`ti ti-${icon} text-[13px]`} style={{ color }} aria-hidden />
-      <Typography variant="caption" className="text-[12px]" style={{ color }}>
+      <Typography variant="caption" sx="text-[12px]" style={{ color }}>
         {label}
       </Typography>
     </div>
@@ -121,7 +121,7 @@ function KbdHint({ keys, action }: { keys: string[]; action: string }) {
           </kbd>
         ))}
       </span>
-      <Typography variant="caption" className="text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
+      <Typography variant="caption" sx="text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
         {action}
       </Typography>
     </div>

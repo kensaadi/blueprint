@@ -46,7 +46,7 @@ function PaletteHeader() {
     >
       <Typography
         variant="caption"
-        className="text-[12px] font-medium uppercase tracking-[0.08em]"
+        sx="text-[12px] font-medium uppercase tracking-[0.08em]"
         style={{ color: 'var(--bd-text-soft)' }}
       >
         Palette
@@ -79,7 +79,7 @@ function CategoryHeader({ cat }: { cat: AtomCategory }) {
     <div className="flex w-full items-center pl-4">
       <Typography
         variant="caption"
-        className="text-[14px] font-semibold uppercase tracking-[0.1em]"
+        sx="text-[14px] font-semibold uppercase tracking-[0.1em]"
         style={{ color: 'var(--bd-text)' }}
       >
         {cat.label}

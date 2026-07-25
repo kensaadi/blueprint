@@ -17,7 +17,7 @@
 import { useMemo } from 'react';
 import { validate } from '@dashforge/blueprint-core';
 import type { ValidationError } from '@dashforge/blueprint-core';
-import type { BlueprintNode } from '@dashforge/blueprint-core';
+import type { BlueprintNode, BlueprintDocument } from '@dashforge/blueprint-core';
 import { useBuilderState } from './BuilderStateContext';
 
 /**
@@ -87,8 +87,14 @@ export function useValidation(): ValidationSummary {
         byId: new Map(),
       };
     }
-    const result = validate(contract, { mode: 'strict' });
-    const emptyWarnings = collectEmptyContainerWarnings(contract.root, '/root');
+    // The Builder's editing `BlueprintNode` (state/types) is a looser shape
+    // than core's; cast at this boundary — the runtime validator still checks
+    // the actual structure.
+    const result = validate(contract as unknown as BlueprintDocument, { mode: 'strict' });
+    const emptyWarnings = collectEmptyContainerWarnings(
+      contract.root as unknown as BlueprintNode,
+      '/root',
+    );
     if (result.ok) {
       const warnings = [...result.warnings, ...emptyWarnings];
       return {

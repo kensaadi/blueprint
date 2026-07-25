@@ -32,7 +32,7 @@ export function PromptDialog({
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
 }: Props) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLFormElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useFocusTrap(rootRef, open);
   const [value, setValue] = useState(defaultValue);

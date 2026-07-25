@@ -66,7 +66,7 @@ function EmptyHints() {
     <>
       <Typography
         variant="body2"
-        className="leading-relaxed"
+        sx="leading-relaxed"
         style={{ color: 'var(--bd-text-soft)' }}
       >
         Select a node on the canvas to edit its properties and state axes.
@@ -88,14 +88,14 @@ function EmptyHints() {
             <div className="min-w-0 flex-1">
               <Typography
                 variant="body2"
-                className="block font-medium"
+                sx="block font-medium"
                 style={{ color: 'var(--bd-text)' }}
               >
                 {h.label}
               </Typography>
               <Typography
                 variant="caption"
-                className="block text-[12px] leading-snug"
+                sx="block text-[12px] leading-snug"
                 style={{ color: 'var(--bd-text-faint)' }}
               >
                 {h.text}
@@ -115,7 +115,7 @@ function SelectedNodeView({
 }: {
   node: import('../state/types').BlueprintNode;
   parent: import('../state/types').BlueprintNode | null;
-  issues: import('../../blueprint-core/errors').ValidationError[];
+  issues: import('@dashforge/blueprint-core').ValidationError[];
 }) {
   const isCustom = !isAtomName(node.type);
   const isGridChild = parent?.type === 'grid';
@@ -124,7 +124,7 @@ function SelectedNodeView({
       <div className="flex flex-col gap-4">
         <Typography
           variant="caption"
-          className="text-[12px] font-medium uppercase tracking-[0.1em]"
+          sx="text-[12px] font-medium uppercase tracking-[0.1em]"
           style={{ color: 'var(--bd-text-faint)' }}
         >
           Selected atom
@@ -132,7 +132,7 @@ function SelectedNodeView({
         <div className="flex items-center gap-2">
           <Typography
             variant="body1"
-            className="text-[17px] font-semibold"
+            sx="text-[17px] font-semibold"
             style={{ color: 'var(--bd-text)' }}
           >
             {node.type}
@@ -194,7 +194,7 @@ function SelectedNodeView({
       <div className="flex flex-col gap-4">
         <Typography
           variant="caption"
-          className="text-[12px] font-medium uppercase tracking-[0.1em]"
+          sx="text-[12px] font-medium uppercase tracking-[0.1em]"
           style={{ color: 'var(--bd-text-faint)' }}
         >
           Props
@@ -214,7 +214,7 @@ function SelectedNodeView({
       <div className="flex flex-col gap-4">
         <Typography
           variant="caption"
-          className="text-[12px] font-medium uppercase tracking-[0.1em]"
+          sx="text-[12px] font-medium uppercase tracking-[0.1em]"
           style={{ color: 'var(--bd-text-faint)' }}
         >
           State axes
@@ -240,7 +240,7 @@ function FormBindingPanel({
     <div className="flex flex-col gap-3">
       <Typography
         variant="caption"
-        className="text-[12px] font-medium uppercase tracking-[0.1em]"
+        sx="text-[12px] font-medium uppercase tracking-[0.1em]"
         style={{ color: 'var(--bd-text-faint)' }}
       >
         Form binding
@@ -288,7 +288,7 @@ function CustomTypeEditor({
     <div className="flex flex-col gap-3">
       <Typography
         variant="caption"
-        className="text-[12px] font-medium uppercase tracking-[0.1em]"
+        sx="text-[12px] font-medium uppercase tracking-[0.1em]"
         style={{ color: 'var(--bd-text-faint)' }}
       >
         Custom type

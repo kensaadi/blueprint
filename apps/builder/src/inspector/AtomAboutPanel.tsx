@@ -37,7 +37,7 @@ export function AtomAboutPanel({ atomName }: { atomName: string }) {
       {open && (
         <Typography
           variant="body2"
-          className="text-[12px] leading-relaxed"
+          sx="text-[12px] leading-relaxed"
           style={{ color: 'var(--bd-text-soft)' }}
         >
           {doc.description}

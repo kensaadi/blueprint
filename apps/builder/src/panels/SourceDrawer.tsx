@@ -69,7 +69,7 @@ function SourceDrawerHeader({ onCopy }: { onCopy: () => void }) {
         />
         <Typography
           variant="caption"
-          className="text-[11px] font-medium uppercase tracking-[0.08em]"
+          sx="text-[11px] font-medium uppercase tracking-[0.08em]"
           style={{ color: 'var(--bd-text-soft)' }}
         >
           Source
@@ -82,10 +82,10 @@ function SourceDrawerHeader({ onCopy }: { onCopy: () => void }) {
         </span>
       </div>
       <div className="flex items-center gap-1">
-        <Button variant="ghost" color="neutral" size="sm">
+        <Button variant="ghost" color="secondary" size="sm">
           Format
         </Button>
-        <Button variant="ghost" color="neutral" size="sm" onClick={onCopy}>
+        <Button variant="ghost" color="secondary" size="sm" onClick={onCopy}>
           Copy
         </Button>
       </div>

@@ -126,14 +126,14 @@ function RootDropZone() {
       </div>
       <Typography
         variant="body1"
-        className="text-[18px] font-medium"
+        sx="text-[18px] font-medium"
         style={{ color: 'var(--bd-text)' }}
       >
         Drop any atom to start
       </Typography>
       <Typography
         variant="caption"
-        className="mt-2 max-w-md text-center text-[14px] leading-relaxed"
+        sx="mt-2 max-w-md text-center text-[14px] leading-relaxed"
         style={{ color: 'var(--bd-text-soft)' }}
       >
         The first atom becomes the root. It can be a form, a page, a stack
@@ -154,7 +154,7 @@ function TemplatePicker() {
     <div className="mt-8">
       <Typography
         variant="caption"
-        className="mb-3 block text-center text-[12px] font-medium uppercase tracking-[0.1em]"
+        sx="mb-3 block text-center text-[12px] font-medium uppercase tracking-[0.1em]"
         style={{ color: 'var(--bd-text-faint)' }}
       >
         Or start from a template
@@ -183,7 +183,7 @@ function TemplatePicker() {
               />
               <Typography
                 variant="body2"
-                className="text-[14px] font-semibold"
+                sx="text-[14px] font-semibold"
                 style={{ color: 'var(--bd-text)' }}
               >
                 {t.name}
@@ -191,7 +191,7 @@ function TemplatePicker() {
             </div>
             <Typography
               variant="caption"
-              className="text-[12px] leading-relaxed"
+              sx="text-[12px] leading-relaxed"
               style={{ color: 'var(--bd-text-soft)' }}
             >
               {t.description}
@@ -500,7 +500,7 @@ function NodeCard({
         />
         <Typography
           variant="caption"
-          className="text-[13px] font-semibold"
+          sx="text-[13px] font-semibold"
           style={{ color: 'var(--bd-text)' }}
         >
           {node.type}
@@ -590,7 +590,7 @@ function NodeCard({
             {node.children.length === 0 ? (
               <Typography
                 variant="caption"
-                className="block text-center text-[12px]"
+                sx="block text-center text-[12px]"
                 style={{ color: 'var(--bd-text-faint)' }}
               >
                 Drop atoms here

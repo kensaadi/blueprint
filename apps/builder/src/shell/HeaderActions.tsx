@@ -71,8 +71,8 @@ function MenuRow({
   title?: string;
 }) {
   return (
-    <MenuItem onClick={onClick} disabled={disabled} title={title}>
-      <span className="flex w-full items-center">
+    <MenuItem onClick={onClick} disabled={disabled}>
+      <span className="flex w-full items-center" title={title}>
         <span>{label}</span>
         {shortcut && <Shortcut keys={shortcut} />}
       </span>
@@ -96,7 +96,7 @@ export function HeaderActions({
     <>
       <Button
         variant="ghost"
-        color="neutral"
+        color="secondary"
         onClick={onToggleTheme}
         aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
       >
@@ -114,7 +114,7 @@ export function HeaderActions({
       {/* File menu — New / Open / Save */}
       <Menu>
         <MenuTrigger>
-          <Button variant="ghost" color="neutral">
+          <Button variant="ghost" color="secondary">
             File ▾
           </Button>
         </MenuTrigger>
@@ -148,7 +148,7 @@ export function HeaderActions({
       {/* Data menu — Import / Export */}
       <Menu>
         <MenuTrigger>
-          <Button variant="ghost" color="neutral">
+          <Button variant="ghost" color="secondary">
             Data ▾
           </Button>
         </MenuTrigger>

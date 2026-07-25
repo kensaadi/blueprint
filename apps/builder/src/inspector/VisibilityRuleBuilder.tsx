@@ -180,7 +180,7 @@ export function VisibilityRuleBuilder({
     if ('op' in partial && 'value' in partial) {
       // Operator swap — drop the old operator key, add the new one.
       const { op: newOp, value: v } = partial;
-      onChange({ field: leaf.field, [newOp]: v });
+      onChange({ field: leaf.field, [newOp as string]: v });
       return;
     }
     onChange({ ...leaf, ...partial });

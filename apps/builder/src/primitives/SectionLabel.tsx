@@ -18,7 +18,7 @@ export function SectionLabel({ children }: { children: ReactNode }) {
   return (
     <Typography
       variant="caption"
-      className="mb-2 block text-[12px] font-medium uppercase tracking-[0.08em]"
+      sx="mb-2 block text-[12px] font-medium uppercase tracking-[0.08em]"
       style={{ color: 'var(--bd-text-soft)' }}
     >
       {children}

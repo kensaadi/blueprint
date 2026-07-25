@@ -40,7 +40,7 @@ export function BuilderHeader(props: BuilderHeaderProps) {
     <TopBar
       start={
         <div className="flex items-center gap-2">
-          <Typography variant="body1" className="font-medium">
+          <Typography variant="body1" sx="font-medium">
             <span style={{ color: 'var(--bd-accent)' }}>@dashforge/</span>builder
           </Typography>
           <Typography
@@ -69,9 +69,10 @@ export function BuilderHeader(props: BuilderHeaderProps) {
         </div>
       }
       slotProps={{
-        root: { className: 'border-b' },
+        root: {
+          className: 'border-b bg-[var(--bd-header)] border-[var(--bd-border)]',
+        },
       }}
-      style={{ background: 'var(--bd-header)', borderColor: 'var(--bd-border)' }}
     />
   );
 }

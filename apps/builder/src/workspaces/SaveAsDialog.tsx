@@ -40,7 +40,7 @@ export function SaveAsDialog({
   workspaces,
   defaultWorkspaceId,
 }: Props) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
+  const rootRef = useRef<HTMLFormElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   useFocusTrap(rootRef, open);
 

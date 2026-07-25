@@ -102,7 +102,7 @@ export function RecentFilesGrid() {
     <div className="mt-8">
       <Typography
         variant="caption"
-        className="mb-3 block text-center text-[12px] font-medium uppercase tracking-[0.1em]"
+        sx="mb-3 block text-center text-[12px] font-medium uppercase tracking-[0.1em]"
         style={{ color: 'var(--bd-text-faint)' }}
       >
         Recent files
@@ -146,7 +146,7 @@ export function RecentFilesGrid() {
                 />
                 <Typography
                   variant="body2"
-                  className="truncate text-[13px] font-semibold"
+                  sx="truncate text-[13px] font-semibold"
                   style={{ color: 'var(--bd-text)' }}
                 >
                   {f.name}

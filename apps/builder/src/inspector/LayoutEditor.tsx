@@ -50,7 +50,7 @@ export function LayoutEditor({ node }: { node: BlueprintNode }) {
       <div className="flex items-center justify-between">
         <Typography
           variant="caption"
-          className="text-[12px] font-medium uppercase tracking-[0.1em]"
+          sx="text-[12px] font-medium uppercase tracking-[0.1em]"
           style={{ color: 'var(--bd-text-faint)' }}
         >
           Column span

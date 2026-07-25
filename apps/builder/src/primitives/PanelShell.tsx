@@ -42,7 +42,7 @@ export function PanelShell({
   return (
     <Card
       variant="outlined"
-      className={`shrink-0 overflow-y-auto ${className}`}
+      sx={`shrink-0 overflow-y-auto ${className}`}
       style={{
         background: 'var(--bd-panel)',
         borderColor: 'var(--bd-border)',

@@ -25,7 +25,7 @@ export function NodeIssuesPanel({ issues }: { issues: ValidationError[] }) {
     <div className="flex flex-col gap-2">
       <Typography
         variant="caption"
-        className="text-[11px] uppercase tracking-[0.1em]"
+        sx="text-[11px] uppercase tracking-[0.1em]"
         style={{ color: 'var(--bd-text-faint)' }}
       >
         Issues on this element
@@ -50,7 +50,7 @@ export function NodeIssuesPanel({ issues }: { issues: ValidationError[] }) {
           <div className="min-w-0 flex-1">
             <Typography
               variant="caption"
-              className="block text-[12px] leading-snug"
+              sx="block text-[12px] leading-snug"
               style={{ color: 'var(--bd-text)' }}
             >
               {issue.message}
@@ -58,7 +58,7 @@ export function NodeIssuesPanel({ issues }: { issues: ValidationError[] }) {
             {issue.expected && (
               <Typography
                 variant="caption"
-                className="mt-1 block text-[11px] leading-snug"
+                sx="mt-1 block text-[11px] leading-snug"
                 style={{ color: 'var(--bd-text-faint)' }}
               >
                 Expected: <code>{issue.expected}</code>
