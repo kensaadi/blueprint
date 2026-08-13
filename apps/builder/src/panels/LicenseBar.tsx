@@ -6,10 +6,40 @@
  * bought a plan must always find where to paste their key, even with the
  * plans section collapsed. So this sits on its own, never hidden.
  *
- * The actual key-entry dialog + offline Ed25519 verification (v2 §7) is
- * deferred; `onEnterLicense` is wired to a no-op during scaffolding.
+ * The default action opens a paste dialog, verifies the token offline
+ * against the pinned Foundry key, and activates it. `onEnterLicense`
+ * overrides this (e.g. for tests).
  */
+import { useCallback } from 'react';
+import { useLicense } from '../licensing/LicenseContext';
+import { useAlert, usePrompt } from '../primitives/DialogFlow';
+
 export function LicenseBar({ onEnterLicense }: { onEnterLicense?: () => void }) {
+  const { activate } = useLicense();
+  const prompt = usePrompt();
+  const alert = useAlert();
+
+  const defaultEnter = useCallback(async () => {
+    const token = await prompt({
+      title: 'Enter license',
+      label: 'License token',
+      placeholder: 'Paste your license key…',
+      confirmLabel: 'Activate',
+    });
+    if (!token) return;
+    const ok = await activate(token.trim());
+    await alert(
+      ok
+        ? { title: 'License activated', body: 'Your plan is now active.' }
+        : {
+            title: 'Invalid license',
+            body: 'That license key could not be verified.',
+          },
+    );
+  }, [prompt, alert, activate]);
+
+  const handleEnter = onEnterLicense ?? defaultEnter;
+
   return (
     <section
       className="mt-8 flex items-center justify-between gap-3 rounded-xl border px-4 py-3"
@@ -35,7 +65,7 @@ export function LicenseBar({ onEnterLicense }: { onEnterLicense?: () => void }) 
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          onEnterLicense?.();
+          handleEnter();
         }}
         className="flex flex-none items-center gap-[6px] rounded-lg px-[14px] py-[7px] text-[12px] font-medium transition-colors"
         style={{ background: 'var(--bd-accent-bg)', color: 'var(--bd-accent)' }}

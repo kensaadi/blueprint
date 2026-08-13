@@ -32,6 +32,11 @@ import { RecentFilesGrid } from './RecentFilesGrid';
 import { MarketplaceCarousel } from './MarketplaceCarousel';
 import { PlansPanel } from './PlansPanel';
 import { LicenseBar } from './LicenseBar';
+import { WorkspaceBar } from './WorkspaceBar';
+import { TeamPanel } from './TeamPanel';
+import { AuditPanel } from './AuditPanel';
+import { TeamTemplatesPanel } from './TeamTemplatesPanel';
+import { GettingStartedChecklist } from './GettingStartedChecklist';
 
 /** Types recognised as containers — they render an inner drop area. */
 const CONTAINER_TYPES = new Set([
@@ -79,11 +84,16 @@ export function CanvasPanel() {
       <div className="mx-auto max-w-3xl">
         {contract.root === null ? (
           <>
+            <GettingStartedChecklist />
             <PlansPanel />
             <RootDropZone />
             <RecentFilesGrid />
             <TemplatePicker />
             <MarketplaceCarousel />
+            <WorkspaceBar />
+            <TeamPanel />
+            <TeamTemplatesPanel />
+            <AuditPanel />
             <LicenseBar />
           </>
         ) : (

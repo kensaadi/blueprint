@@ -4,7 +4,7 @@
  * A marketplace template is a ONE-TIME purchase, priced per template,
  * the same price for everyone regardless of subscription tier
  * (Decision #37). Pricing is a discriminated union so "free" is explicit
- * and never conflated with a €0 paid item.
+ * and never conflated with a $0 paid item.
  *
  * Ownership/access lives in `licensing/entitlements.tsx` — free OR owned,
  * never a tier check. This module carries no `Tier` reference on purpose.
@@ -29,7 +29,7 @@ export const CATEGORY_LABEL: Record<TemplateCategory, string> = {
 
 export type TemplatePricing =
   | { kind: 'free' }
-  | { kind: 'paid'; /** Whole euros, for display; real charge is server-side. */ priceEur: number };
+  | { kind: 'paid'; /** Whole dollars, for display; real charge is server-side. */ priceUsd: number };
 
 export type MarketplaceTemplate = {
   id: string;
@@ -51,7 +51,7 @@ export function isFreeTemplate(t: Pick<MarketplaceTemplate, 'pricing'>): boolean
   return t.pricing.kind === 'free';
 }
 
-/** Badge label — "Free" or "€29". Same for every tier. */
+/** Badge label — "Free" or "$29". Same for every tier. */
 export function priceLabel(t: Pick<MarketplaceTemplate, 'pricing'>): string {
-  return t.pricing.kind === 'free' ? 'Free' : `€${t.pricing.priceEur}`;
+  return t.pricing.kind === 'free' ? 'Free' : `$${t.pricing.priceUsd}`;
 }

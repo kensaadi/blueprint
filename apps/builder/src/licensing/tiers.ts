@@ -61,7 +61,7 @@ export const TIERS: readonly TierMeta[] = [
   {
     id: 'pro',
     label: 'Pro',
-    priceLabel: '€39 / mo',
+    priceLabel: '$39 / mo',
     tagline: 'Remote storage & versioning',
     cta: 'stripe',
     features: PRO_FEATURES,
@@ -75,7 +75,7 @@ export const TIERS: readonly TierMeta[] = [
   {
     id: 'team',
     label: 'Team',
-    priceLabel: '€99 / seat / mo',
+    priceLabel: '$99 / seat / mo',
     tagline: 'Shared workspaces, lock & roles',
     cta: 'stripe',
     features: TEAM_FEATURES,
@@ -85,7 +85,7 @@ export const TIERS: readonly TierMeta[] = [
   {
     id: 'business',
     label: 'Business',
-    priceLabel: '€399 / mo',
+    priceLabel: '$399 / mo',
     tagline: 'SSO, audit log, flat pricing',
     cta: 'stripe',
     features: BUSINESS_FEATURES,

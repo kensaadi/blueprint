@@ -19,10 +19,15 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from 'react';
+import {
+  loadOwnedTemplateIds,
+  saveOwnedTemplateIds,
+} from './entitlementsStore';
 
 /**
  * The minimal shape template-access needs. Any richer marketplace
@@ -72,9 +77,16 @@ export function EntitlementsProvider({
   initialOwned?: Iterable<string>;
   children: ReactNode;
 }) {
+  // Seed from the prop AND from persisted purchases, so a bought
+  // template stays owned across reloads.
   const [owned, setOwned] = useState<ReadonlySet<string>>(
-    () => new Set(initialOwned ?? []),
+    () => new Set([...(initialOwned ?? []), ...loadOwnedTemplateIds()]),
   );
+
+  // Persist whenever the owned set changes.
+  useEffect(() => {
+    saveOwnedTemplateIds([...owned]);
+  }, [owned]);
 
   const grant = useCallback((templateId: string) => {
     setOwned((prev) => {

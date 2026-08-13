@@ -14,8 +14,12 @@ import { Suspense, lazy, useEffect, useState } from 'react';
 import type { MarketplaceTemplate } from '../marketplace/types';
 import { CATEGORY_LABEL, isFreeTemplate, priceLabel } from '../marketplace/types';
 import { getTemplate } from '../marketplace/service';
+import { createCheckoutSession } from '../api/marketplace/service';
 import { outlineOf, countByType } from '../marketplace/atomSummary';
 import { useEntitlements } from '../licensing/entitlements';
+import { useAlert } from '../primitives/DialogFlow';
+import { useBuilderDispatch } from '../state/BuilderStateContext';
+import { useMarketplaceTab } from '../state/MarketplaceTabContext';
 
 // Lazy so `@dashforge/blueprint` (+ flavor packs) only loads when a modal
 // actually opens — never in the Builder's first paint.
@@ -65,7 +69,10 @@ export function TemplateDetailModal({
   onClose: () => void;
 }) {
   const [template, setTemplate] = useState<MarketplaceTemplate | null>(null);
-  const { canUse, grant } = useEntitlements();
+  const { canUse } = useEntitlements();
+  const alert = useAlert();
+  const dispatch = useBuilderDispatch();
+  const { closeMarketplace } = useMarketplaceTab();
 
   // Fetch the full detail (incl. contract) when a template is selected.
   useEffect(() => {
@@ -226,7 +233,22 @@ export function TemplateDetailModal({
               {usable ? (
                 <button
                   type="button"
-                  className="rounded-lg border px-5 py-[9px] text-[13px] font-medium"
+                  // Load the template's contract into the canvas, then
+                  // switch back from the marketplace tab so the user lands
+                  // on the freshly-loaded design.
+                  onClick={async () => {
+                    if (!template.contract) {
+                      await alert({
+                        title: 'Preview unavailable',
+                        body: 'This template could not be loaded. Please try again.',
+                      });
+                      return;
+                    }
+                    dispatch({ type: 'replaceContract', contract: template.contract });
+                    closeMarketplace();
+                    onClose();
+                  }}
+                  className="cursor-pointer rounded-lg border px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97]"
                   style={{ borderColor: 'var(--bd-border-strong)', color: 'var(--bd-text)' }}
                 >
                   Use this template
@@ -234,10 +256,19 @@ export function TemplateDetailModal({
               ) : (
                 <button
                   type="button"
-                  // Scaffolding stand-in for the one-time Stripe checkout →
-                  // records ownership locally so the CTA flips to "Use".
-                  onClick={() => grant(template.id)}
-                  className="rounded-lg px-5 py-[9px] text-[13px] font-medium"
+                  // Start a one-shot Stripe checkout on Foundry and
+                  // redirect to the hosted page. Ownership is granted on
+                  // return (CheckoutReturn), after the webhook mints the
+                  // signed receipt — not optimistically here.
+                  onClick={async () => {
+                    const r = await createCheckoutSession(template.id);
+                    if (r.error) {
+                      await alert({ title: 'Checkout error', body: r.error.message });
+                      return;
+                    }
+                    window.location.href = r.data.url;
+                  }}
+                  className="cursor-pointer rounded-lg px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97]"
                   style={{ background: 'var(--bd-accent)', color: 'var(--bd-accent-fg)' }}
                 >
                   Buy {priceLabel(template)}

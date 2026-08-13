@@ -18,6 +18,10 @@
 import { TopBar, Typography } from '@dashforge/tw';
 import { StatusChip, type ValidationState } from './StatusChip';
 import { HeaderActions } from './HeaderActions';
+import { HistoryButton } from '../panels/HistoryButton';
+import { CollabLockBadge } from '../panels/CollabLockBadge';
+import { DeployButton } from '../panels/DeployButton';
+import { PlanBadge } from '../panels/PlanBadge';
 
 type BuilderHeaderProps = {
   filePath: string;
@@ -40,8 +44,16 @@ export function BuilderHeader(props: BuilderHeaderProps) {
     <TopBar
       start={
         <div className="flex items-center gap-2">
+          <img
+            src="/favicon.svg"
+            alt=""
+            width={20}
+            height={20}
+            aria-hidden
+            className="flex-none"
+          />
           <Typography variant="body1" sx="font-medium">
-            <span style={{ color: 'var(--bd-accent)' }}>@dashforge/</span>builder
+            <span style={{ color: 'var(--bd-text-soft)' }}>Dashforge </span>Builder
           </Typography>
           <Typography
             variant="body2"
@@ -49,10 +61,14 @@ export function BuilderHeader(props: BuilderHeaderProps) {
           >
             ·  {props.filePath}
           </Typography>
+          <HistoryButton />
+          <DeployButton />
+          <CollabLockBadge />
         </div>
       }
       end={
         <div className="flex items-center gap-2">
+          <PlanBadge />
           <StatusChip state={props.validation} />
           <HeaderActions
             theme={props.theme}

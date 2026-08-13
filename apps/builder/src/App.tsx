@@ -46,6 +46,11 @@ import { CommandPalette, type PaletteMode } from './commands/CommandPalette';
 import { FileBrowserModal } from './workspaces/FileBrowserModal';
 import { SaveAsFlowProvider } from './workspaces/SaveAsFlow';
 import { DialogFlowProvider, useAlert } from './primitives/DialogFlow';
+import { CheckoutReturn } from './licensing/CheckoutReturn';
+import { AcceptInvite } from './licensing/AcceptInvite';
+import { LicenseExpiredBanner } from './panels/LicenseExpiredBanner';
+import { FirstRunOnboarding } from './panels/FirstRunOnboarding';
+import { WorkspaceRegistrar } from './workspaces/WorkspaceRegistrar';
 import { BuilderErrorBoundary } from './shell/BuilderErrorBoundary';
 
 type Theme = 'dark' | 'light';
@@ -83,6 +88,10 @@ export function BuilderApp() {
     <MarketplaceTabProvider>
     <DialogFlowProvider>
     <SaveAsFlowProvider>
+    <CheckoutReturn />
+    <AcceptInvite />
+    <FirstRunOnboarding />
+    <WorkspaceRegistrar />
     <DndProvider>
     <BuilderShortcuts
       onOpenPalette={(mode = 'all') => {
@@ -105,7 +114,9 @@ export function BuilderApp() {
       onToggleSource={() => setSourceOpen((v) => !v)}
       onOpenBrowser={() => setBrowserOpen(true)}
     />
+    <BuilderErrorBoundary>
     <div className="flex h-screen flex-col overflow-hidden">
+    <LicenseExpiredBanner />
     <AppShell
       header={
         <LiveHeader
@@ -143,6 +154,7 @@ export function BuilderApp() {
       </BuilderErrorBoundary>
     </AppShell>
     </div>
+    </BuilderErrorBoundary>
     </DndProvider>
     </SaveAsFlowProvider>
     </DialogFlowProvider>

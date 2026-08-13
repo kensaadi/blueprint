@@ -15,6 +15,7 @@ import './index.css';
 import './theme/tokens.css';
 import { BuilderApp } from './App';
 import { LicenseProvider } from './licensing/LicenseContext';
+import { TierCatalogProvider } from './licensing/TierCatalogContext';
 import { EntitlementsProvider } from './licensing/entitlements';
 
 // Scaffolding defaults: no license token → Community tier; no purchased
@@ -25,11 +26,13 @@ import { EntitlementsProvider } from './licensing/entitlements';
 createRoot(document.getElementById('builder-root')!).render(
   <StrictMode>
     <DashforgeTailwindProvider>
-      <LicenseProvider>
-        <EntitlementsProvider>
-          <BuilderApp />
-        </EntitlementsProvider>
-      </LicenseProvider>
+      <TierCatalogProvider>
+        <LicenseProvider>
+          <EntitlementsProvider>
+            <BuilderApp />
+          </EntitlementsProvider>
+        </LicenseProvider>
+      </TierCatalogProvider>
     </DashforgeTailwindProvider>
   </StrictMode>,
 );

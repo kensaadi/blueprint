@@ -42,6 +42,29 @@ function ensureIds(node: BlueprintNode): BlueprintNode {
   return withId;
 }
 
+/**
+ * Coerce an already-parsed value (from a remote workspace or a team
+ * template) into a structurally-safe `Contract` — NEVER throws. Unlike
+ * `parseContract` (strict, for user imports) this is lenient: it fixes
+ * structural gaps (`ensureIds` fills missing `children`/`props`/`id`) so a
+ * slightly-off contract still renders instead of crashing the canvas AND
+ * the header's validator. A non-object, or a value without a usable `root`,
+ * yields an empty contract. This is the load-boundary guard for every
+ * backend-sourced contract.
+ */
+export function normalizeContract(parsed: unknown): Contract {
+  if (!parsed || typeof parsed !== 'object') {
+    return { version: '1', root: null };
+  }
+  const doc = parsed as { version?: unknown; root?: unknown };
+  const version = typeof doc.version === 'string' ? doc.version : '1';
+  const root =
+    doc.root && typeof doc.root === 'object'
+      ? ensureIds(doc.root as BlueprintNode)
+      : null;
+  return { version, root };
+}
+
 export function parseContract(source: string): ImportResult {
   let parsed: unknown;
   try {

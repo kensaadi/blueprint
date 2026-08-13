@@ -10,6 +10,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { getCatalog } from '../marketplace/service';
+import { useEntitlements } from '../licensing/entitlements';
 import {
   CATEGORY_LABEL,
   isFreeTemplate,
@@ -32,9 +33,11 @@ const CATEGORIES: { id: 'all' | TemplateCategory; label: string }[] = [
 
 function TemplateCard({
   t,
+  owned,
   onOpen,
 }: {
   t: MarketplaceTemplate;
+  owned: boolean;
   onOpen: (id: string) => void;
 }) {
   const free = isFreeTemplate(t);
@@ -51,16 +54,26 @@ function TemplateCard({
           style={{ color: 'var(--bd-accent)' }}
           aria-hidden
         />
-        <span
-          className="rounded-full px-2 py-[2px] text-[10px] font-medium"
-          style={
-            free
-              ? { background: 'var(--bd-success-bg)', color: 'var(--bd-success)' }
-              : { background: 'var(--bd-accent-bg)', color: 'var(--bd-accent)' }
-          }
-        >
-          {priceLabel(t)}
-        </span>
+        {owned && !free ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[10px] font-medium"
+            style={{ background: 'var(--bd-success-bg)', color: 'var(--bd-success)' }}
+          >
+            <i className="ti ti-check text-[11px]" aria-hidden />
+            Owned
+          </span>
+        ) : (
+          <span
+            className="rounded-full px-2 py-[2px] text-[10px] font-medium"
+            style={
+              free
+                ? { background: 'var(--bd-success-bg)', color: 'var(--bd-success)' }
+                : { background: 'var(--bd-accent-bg)', color: 'var(--bd-accent)' }
+            }
+          >
+            {priceLabel(t)}
+          </span>
+        )}
       </div>
       <div className="mt-3 text-[14px] font-semibold" style={{ color: 'var(--bd-text)' }}>
         {t.name}
@@ -84,6 +97,7 @@ export function MarketplacePanel() {
   const [price, setPrice] = useState<PriceFilter>('all');
   const [category, setCategory] = useState<'all' | TemplateCategory>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { owns } = useEntitlements();
 
   useEffect(() => {
     let alive = true;
@@ -162,7 +176,7 @@ export function MarketplacePanel() {
         {items.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {items.map((t) => (
-              <TemplateCard key={t.id} t={t} onOpen={setSelectedId} />
+              <TemplateCard key={t.id} t={t} owned={owns(t.id)} onOpen={setSelectedId} />
             ))}
           </div>
         ) : (

@@ -12,7 +12,8 @@
  * filters lives in the Marketplace tab. Prices are one-time, per
  * template, the same for every tier (Decision #37) — never a subscription.
  */
-import { MARKETPLACE_TEMPLATES } from '../marketplace/catalog';
+import { useEffect, useState } from 'react';
+import { getCatalog } from '../marketplace/service';
 import { isFreeTemplate, priceLabel, type MarketplaceTemplate } from '../marketplace/types';
 import { useMarketplaceTab } from '../state/MarketplaceTabContext';
 
@@ -66,10 +67,32 @@ function CarouselCard({
 
 export function MarketplaceCarousel() {
   const { openMarketplace } = useMarketplaceTab();
+  const [items, setItems] = useState<MarketplaceTemplate[]>([]);
+
+  // Pull the teaser list through the same seam as the full catalog
+  // (mock or live Foundry). Failures degrade to an empty carousel — a
+  // teaser is non-essential, so a Foundry hiccup must not break the
+  // start surface.
+  useEffect(() => {
+    let alive = true;
+    getCatalog()
+      .then((c) => {
+        if (alive) setItems(c);
+      })
+      .catch(() => {
+        if (alive) setItems([]);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  if (items.length === 0) return null;
+
   // Duplicate the list so the marquee loops seamlessly (translateX(-50%)
   // lands exactly one copy over — see `.bd-marquee` in tokens.css).
-  const loop = [...MARKETPLACE_TEMPLATES, ...MARKETPLACE_TEMPLATES];
-  const n = MARKETPLACE_TEMPLATES.length;
+  const loop = [...items, ...items];
+  const n = items.length;
 
   return (
     <section className="mt-8" aria-label="Marketplace templates">

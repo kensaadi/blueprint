@@ -20,6 +20,23 @@ export function filenameForContract(contract: Contract): string {
   return (safe || 'untitled') + '.json';
 }
 
+/**
+ * Filename for a specific exported version, tagging provenance in the
+ * name (never in the payload) — e.g. `checkout.v5.json`, or with the
+ * environment it's marked on, `checkout.production.v5.json`. Keeps the
+ * exported JSON exactly what the Blueprint runtime consumes.
+ */
+export function filenameForVersion(
+  contract: Contract,
+  opts: { version: number; env?: string },
+): string {
+  const base = filenameForContract(contract).replace(/\.json$/, '');
+  const env = opts.env
+    ? '.' + opts.env.replace(/[^a-zA-Z0-9_-]+/g, '-')
+    : '';
+  return `${base}${env}.v${opts.version}.json`;
+}
+
 /** Pretty-printed JSON — the shape Blueprint runtime consumes. */
 export function serializeContract(contract: Contract): string {
   return JSON.stringify(contract, null, 2);
@@ -29,12 +46,12 @@ export function serializeContract(contract: Contract): string {
  * Trigger a browser download of the contract as a .json file.
  * Uses a temporary Blob URL cleaned up on next microtask.
  */
-export function downloadContract(contract: Contract): void {
+export function downloadContract(contract: Contract, filename?: string): void {
   const blob = new Blob([serializeContract(contract)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filenameForContract(contract);
+  a.download = filename ?? filenameForContract(contract);
   document.body.appendChild(a);
   a.click();
   a.remove();

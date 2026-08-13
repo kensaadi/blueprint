@@ -26,7 +26,7 @@ export const MARKETPLACE_TEMPLATES: MarketplaceTemplate[] = [
     description: 'Plans, invoices, cards.',
     icon: 'report-money',
     categories: ['commerce'],
-    pricing: { kind: 'paid', priceEur: 29 },
+    pricing: { kind: 'paid', priceUsd: 29 },
     contract: CHECKOUT,
   },
   {
@@ -35,7 +35,7 @@ export const MARKETPLACE_TEMPLATES: MarketplaceTemplate[] = [
     description: 'Multi-step invite flow.',
     icon: 'users',
     categories: ['onboarding', 'auth'],
-    pricing: { kind: 'paid', priceEur: 19 },
+    pricing: { kind: 'paid', priceUsd: 19 },
     contract: KYC,
   },
   {
@@ -53,7 +53,7 @@ export const MARKETPLACE_TEMPLATES: MarketplaceTemplate[] = [
     description: 'Cart, address, payment.',
     icon: 'shopping-cart',
     categories: ['commerce'],
-    pricing: { kind: 'paid', priceEur: 39 },
+    pricing: { kind: 'paid', priceUsd: 39 },
     contract: CHECKOUT,
   },
   {
@@ -62,7 +62,7 @@ export const MARKETPLACE_TEMPLATES: MarketplaceTemplate[] = [
     description: 'ID upload, checks, consent.',
     icon: 'user-check',
     categories: ['auth', 'onboarding'],
-    pricing: { kind: 'paid', priceEur: 24 },
+    pricing: { kind: 'paid', priceUsd: 24 },
     contract: KYC,
   },
 ];
