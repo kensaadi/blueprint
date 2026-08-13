@@ -40,14 +40,12 @@ that grants use in closed-source products without the AGPL's network-copyleft
 requirements.
 
 > **Don't want AGPL obligations in your app? You don't have to accept them.**
-> A commercial license is available. Contact **Kenjy Saadi —
-> ken.saadi@yahoo.com** to get terms.
+> A commercial license is available. Contact **info@dashforge-ui.com** to get
+> terms.
 
 ## Notes
 
 - This page is **informational**, not the commercial contract itself. Actual
   commercial terms are provided (and should be reviewed by your legal team)
   before signing.
-- The contact above is a placeholder for now; it will move to a dedicated
-  licensing address.
 - SPDX identifiers in each `package.json` are authoritative for tooling.
