@@ -39,13 +39,11 @@ describe('no-eval guarantee', () => {
     let touched = '';
 
     // Swap the dynamic-code primitives for tripwires.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalThis.Function = function (..._args: unknown[]): never {
       touched = 'new Function';
       throw new Error('new Function was called');
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     globalThis.eval = function (): never {
       touched = 'eval';
       throw new Error('eval was called');
