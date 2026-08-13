@@ -15,7 +15,7 @@
  * (and predicates that compare against them are false).
  */
 
-import { z } from 'zod';
+import { z } from './zod-jitless';
 
 /** Re-usable leaf-predicate scaffolding. */
 const leafField = { field: z.string().regex(/^\$[a-zA-Z]+\..+/, 'must be "$prefix.path"') } as const;

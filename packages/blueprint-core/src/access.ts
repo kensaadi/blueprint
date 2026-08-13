@@ -7,7 +7,7 @@
  * `resolveAccessState` internally.
  */
 
-import { z } from 'zod';
+import { z } from './zod-jitless';
 import type { AccessRequirement } from '@dashforge/rbac';
 
 export const accessRuleSchema = z.object({

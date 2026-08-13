@@ -15,7 +15,7 @@
  *   3. Render fallback — `<IconFallback />` paints a small placeholder
  *      square so the UI never explodes on a typo
  */
-import { z } from 'zod';
+import { z } from './zod-jitless';
 import type { ReactElement } from 'react';
 import type { BlueprintNode } from './types';
 import type { ValidationError } from './errors';

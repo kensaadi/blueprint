@@ -13,7 +13,7 @@
  *
  * No React in this file. Renderer lives in `blueprint/InlineText.tsx`.
  */
-import { z } from 'zod';
+import { z } from './zod-jitless';
 
 // ─── URL sanitizer ─────────────────────────────────────────────────
 

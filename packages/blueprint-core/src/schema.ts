@@ -4,7 +4,7 @@
  * schemas (from `./atoms.ts`) are applied in a separate pass.
  */
 
-import { z } from 'zod';
+import { z } from './zod-jitless';
 import { visibilityValueSchema } from './visibility';
 import { accessRuleSchema } from './access';
 import { layoutHintSchema } from './layout';

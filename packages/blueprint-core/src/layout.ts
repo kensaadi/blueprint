@@ -22,7 +22,7 @@
  * are future extensions if real contracts need them, not speculative
  * surface area today.
  */
-import { z } from 'zod';
+import { z } from './zod-jitless';
 
 /** `1..12` OR responsive object keyed by breakpoint. */
 const responsiveNumber = z.union([

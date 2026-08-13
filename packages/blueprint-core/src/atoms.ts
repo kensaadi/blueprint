@@ -7,7 +7,7 @@
  * deferred to runtime (customNode / slot override / red block).
  */
 
-import { z, type ZodTypeAny } from 'zod';
+import { z, type ZodTypeAny } from './zod-jitless';
 import { inlineTextSchema, translatableStringSchema } from './inline';
 
 // ─────────────────────────────────────────────────────────────────────
