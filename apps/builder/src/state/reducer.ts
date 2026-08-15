@@ -244,13 +244,18 @@ export function builderReducer(
       // conservative; UX-level nudges (e.g. shake animation) are the
       // Canvas's job, not the state's.
       if (isDescendantOrSelf(moving, action.newParentId)) return state;
+      // Dropping onto the reorder strip directly above the node itself
+      // targets `insertBeforeId === id`. That's a no-op, NOT an
+      // append-to-end — leave the tree untouched instead of yanking the
+      // node to the bottom of its list.
+      if (action.insertBeforeId === action.id) return state;
       // Detach from old parent, then insert under the new one, in a
       // single tree walk so intermediate states never appear.
       const detached = removeById(root, action.id);
       const nextRoot = mapTree(detached, (n) => {
         if (n.id !== action.newParentId) return n;
         const before = action.insertBeforeId;
-        if (before && before !== action.id) {
+        if (before) {
           const idx = n.children.findIndex((c) => c.id === before);
           if (idx >= 0) {
             const nextChildren = n.children.slice();

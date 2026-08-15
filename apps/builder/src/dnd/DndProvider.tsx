@@ -25,7 +25,7 @@ export type PaletteDragData = { kind: 'palette'; atomType: string };
 // Drag of an existing node in the canvas tree — used for reorder /
 // re-parenting. The reducer refuses cyclic drops (parent into own
 // descendant); this data shape doesn't need to encode that guard.
-export type ExistingNodeDragData = { kind: 'existing'; nodeId: string };
+export type ExistingNodeDragData = { kind: 'existing'; nodeId: string; atomType: string };
 // `parentId: null` targets the empty root drop zone (creates the root
 // atom on first drop). Non-null targets a container's inner area.
 export type ContainerDropData = { kind: 'container'; parentId: string | null };
@@ -62,7 +62,9 @@ function isReorderDrop(x: unknown): x is ReorderDropData {
 
 export function DndProvider({ children }: { children: ReactNode }) {
   const dispatch = useBuilderDispatch();
-  const [dragging, setDragging] = useState<PaletteDragData | null>(null);
+  // Preview payload for the DragOverlay — set for BOTH palette drags and
+  // existing-node drags so a ghost follows the pointer either way.
+  const [dragging, setDragging] = useState<{ atomType: string } | null>(null);
 
   // PointerSensor's activationConstraint prevents the drag from
   // hijacking a plain click on the palette item — a small distance
@@ -74,11 +76,12 @@ export function DndProvider({ children }: { children: ReactNode }) {
 
   const onDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current;
-    if (isPaletteDrag(data)) setDragging(data);
-    // We deliberately DO NOT set a preview for existing-node drags:
-    // dnd-kit's default translate on the source card + the accent
-    // overlay on the drop zone already read as "moving this thing
-    // over there". A floating preview would double up.
+    // Both palette and existing-node drags get a floating ghost. The
+    // source card only fades to 0.35 opacity in place (its transform is
+    // never applied), so without an overlay an existing-node drag had
+    // nothing following the pointer — it read as "dead".
+    if (isPaletteDrag(data)) setDragging({ atomType: data.atomType });
+    else if (isExistingDrag(data)) setDragging({ atomType: data.atomType });
   };
 
   const onDragEnd = (e: DragEndEvent) => {

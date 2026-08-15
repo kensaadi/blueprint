@@ -453,7 +453,7 @@ function NodeCard({
   // Non-root nodes become drag sources. Payload declares "this is an
   // existing node" so the reducer routes into `moveNode` instead of
   // `addNode` at drop time.
-  const dragData: ExistingNodeDragData = { kind: 'existing', nodeId: node.id };
+  const dragData: ExistingNodeDragData = { kind: 'existing', nodeId: node.id, atomType: node.type };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `node:${node.id}`,
     data: dragData,
@@ -700,16 +700,18 @@ function ReorderStrip({
       data-reorder-strip
       data-reorder-index={index}
       style={{
-        height: 8,
-        marginTop: index === 0 ? 0 : -4,
-        marginBottom: -4,
+        // Taller hit band (net layout impact stays ~0 via the negative
+        // margins) so the reorder target isn't pixel-thin to aim at.
+        height: 12,
+        marginTop: index === 0 ? -4 : -6,
+        marginBottom: -6,
         position: 'relative',
       }}
     >
       <div
         style={{
           position: 'absolute',
-          inset: '3px 4px',
+          inset: '5px 4px',
           borderRadius: 2,
           background: isOver ? 'var(--bd-accent)' : 'transparent',
           opacity: isOver ? 1 : 0,
