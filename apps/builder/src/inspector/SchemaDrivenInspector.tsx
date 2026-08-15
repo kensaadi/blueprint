@@ -47,7 +47,7 @@ export function SchemaDrivenInspector({ node }: { node: BlueprintNode }) {
             // never touched". The reducer's shallow merge preserves it.
             dispatch({
               type: 'updateProps',
-              id: node.id,
+              id: node._uid,
               patch: { [field.key]: next },
             });
           }}

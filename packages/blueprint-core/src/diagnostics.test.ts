@@ -30,7 +30,7 @@ const doc: BlueprintDocument = {
           { type: 'text', props: { children: 'Hi' } },
           {
             type: 'form',
-            id: 'kyc-form',
+            nodeId: 'kyc-form',
             children: [
               { type: 'field', props: { name: 'email', required: true } },
               { type: 'field', props: { name: 'phone' } },
@@ -94,8 +94,8 @@ describe('valueAtPath', () => {
     expect(valueAtPath(doc, '/root/children/0/props/level')).toBe(1);
   });
   test('resolves array index', () => {
-    expect(valueAtPath(doc, '/root/children/1/id')).toBeUndefined();
-    expect(valueAtPath(doc, '/root/children/1/children/1/id')).toBe('kyc-form');
+    expect(valueAtPath(doc, '/root/children/1/nodeId')).toBeUndefined();
+    expect(valueAtPath(doc, '/root/children/1/children/1/nodeId')).toBe('kyc-form');
   });
   test('returns undefined for non-existing path', () => {
     expect(valueAtPath(doc, '/root/children/99/foo')).toBeUndefined();
@@ -110,7 +110,7 @@ describe('nodeAncestors', () => {
   });
   test('captures index when crumb sits inside children array', () => {
     const crumbs = nodeAncestors(doc, '/root/children/1/children/1/children/1');
-    expect(crumbs.map((c) => `${c.type}#${c.id ?? ''}[${c.index ?? ''}]`)).toEqual([
+    expect(crumbs.map((c) => `${c.type}#${c.nodeId ?? ''}[${c.index ?? ''}]`)).toEqual([
       'card#[]',
       'stack#[1]',
       'form#kyc-form[1]',

@@ -51,7 +51,7 @@ describe('validator — cyclic visibility detection', () => {
   test('no cycle — passes', () => {
     const result = validate(makeDoc({
       type: 'form',
-      id: 'f',
+      nodeId: 'f',
       children: [
         { type: 'field', props: { name: 'country' } },
         { type: 'field', props: { name: 'taxId' }, visibility: { field: '$form.country', eq: 'IT' } },
@@ -66,7 +66,7 @@ describe('validator — cyclic visibility detection', () => {
   test('A → B → A cycle — emits warning in lenient', () => {
     const result = validate(makeDoc({
       type: 'form',
-      id: 'f',
+      nodeId: 'f',
       children: [
         { type: 'field', props: { name: 'A' }, visibility: { field: '$form.B', eq: 'x' } },
         { type: 'field', props: { name: 'B' }, visibility: { field: '$form.A', eq: 'y' } },
@@ -83,7 +83,7 @@ describe('validator — cyclic visibility detection', () => {
   test('cycle — emits error in strict', () => {
     const result = validate(makeDoc({
       type: 'form',
-      id: 'f',
+      nodeId: 'f',
       children: [
         { type: 'field', props: { name: 'A' }, visibility: { field: '$form.B', eq: 'x' } },
         { type: 'field', props: { name: 'B' }, visibility: { field: '$form.A', eq: 'y' } },
@@ -99,7 +99,7 @@ describe('validator — cyclic visibility detection', () => {
   test('A → B → C → A — detected', () => {
     const result = validate(makeDoc({
       type: 'form',
-      id: 'f',
+      nodeId: 'f',
       children: [
         { type: 'field', props: { name: 'A' }, visibility: { field: '$form.C', eq: 'x' } },
         { type: 'field', props: { name: 'B' }, visibility: { field: '$form.A', eq: 'x' } },
@@ -115,7 +115,7 @@ describe('validator — cyclic visibility detection', () => {
   test('self-reference (A depends on $form.A) — flagged as cycle', () => {
     const result = validate(makeDoc({
       type: 'form',
-      id: 'f',
+      nodeId: 'f',
       children: [
         { type: 'field', props: { name: 'A' }, visibility: { field: '$form.A', eq: 'x' } },
       ],
@@ -129,7 +129,7 @@ describe('validator — cyclic visibility detection', () => {
   test('static boolean visibility does NOT create a cycle', () => {
     const result = validate(makeDoc({
       type: 'form',
-      id: 'f',
+      nodeId: 'f',
       children: [
         { type: 'field', props: { name: 'A' }, visibility: false },
         { type: 'field', props: { name: 'B' }, visibility: { field: '$form.A', eq: 'x' } },

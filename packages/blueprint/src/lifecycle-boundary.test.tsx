@@ -16,11 +16,11 @@ const simpleContract = {
   version: '1.0' as const,
   root: {
     type: 'stack',
-    id: 'root',
+    nodeId: 'root',
     props: { spacing: 'md' },
     children: [
-      { type: 'heading', id: 'h', props: { level: 1, children: 'Hello' } },
-      { type: 'text', id: 't', props: { children: 'World' } },
+      { type: 'heading', nodeId: 'h', props: { level: 1, children: 'Hello' } },
+      { type: 'text', nodeId: 't', props: { children: 'World' } },
     ],
   } satisfies BlueprintNode,
 };
@@ -50,12 +50,12 @@ describe('React StrictMode double-mount safety', () => {
       version: '1.0' as const,
       root: {
         type: 'form',
-        id: 'sample',
+        nodeId: 'sample',
         props: {},
         children: [
           {
             type: 'field',
-            id: 'name',
+            nodeId: 'name',
             props: { name: 'name', label: 'Name', kind: 'text' },
           },
         ],

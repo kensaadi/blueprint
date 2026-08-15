@@ -22,7 +22,7 @@ const emptyRequiredContract: BlueprintDocument = {
   version: '1.0',
   root: {
     type: 'form',
-    id: 'empty-form',
+    nodeId: 'empty-form',
     children: [
       { type: 'field', props: { name: 'firstName', label: 'First name', required: true } },
       { type: 'field', props: { name: 'email', type: 'email', label: 'Email', required: true } },

@@ -15,7 +15,12 @@ const versionSchema = z.enum(SUPPORTED_VERSIONS);
 const libSchema = z.enum(['tw', 'mui']);
 
 export const nodeSchema: z.ZodType<unknown> = z.lazy(() => z.object({
-  id: z.string().optional(),
+  // Public, human-authored addressing key: the handle a consumer uses to
+  // slot-override this node (`<DashBlueprint slots={{ [nodeId]: … }}>`) or
+  // to find a form's config (`forms[nodeId]`). Optional in the schema
+  // (bare hand-authored contracts are valid); the Builder always generates
+  // one. Must be unique across the contract when present.
+  nodeId: z.string().min(1).optional(),
   type: z.string().min(1, 'node.type must be a non-empty string'),
   props: z.record(z.string(), z.unknown()).optional(),
   children: z.array(nodeSchema).optional(),

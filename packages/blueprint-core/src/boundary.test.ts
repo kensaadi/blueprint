@@ -27,7 +27,7 @@ function buildBalancedTree(nodeCount: number): BlueprintNode {
     for (let i = 0; i < inThisGroup; i++) {
       kids.push({
         type: 'text',
-        id: nextId(),
+        nodeId: nextId(),
         props: { children: `Row ${idCounter}` },
       });
     }
@@ -36,7 +36,7 @@ function buildBalancedTree(nodeCount: number): BlueprintNode {
     }
     return {
       type: 'stack',
-      id: nextId(),
+      nodeId: nextId(),
       props: { spacing: 'md' },
       children: kids,
     };
@@ -49,7 +49,7 @@ function buildBalancedTree(nodeCount: number): BlueprintNode {
   }
   return {
     type: 'stack',
-    id: 'root',
+    nodeId: 'root',
     props: { spacing: 'lg' },
     children,
   };
@@ -102,7 +102,7 @@ describe('validator — deep visibility nesting', () => {
       version: '1.0' as const,
       root: {
         type: 'text',
-        id: 'gated',
+        nodeId: 'gated',
         props: { children: 'ok' },
         visibility: rule,
       } as BlueprintNode,
@@ -142,7 +142,7 @@ describe('validator — malformed input', () => {
     // infinite-loop the process.
     const parent: BlueprintNode = {
       type: 'stack',
-      id: 'a',
+      nodeId: 'a',
       props: { spacing: 'md' },
       children: [],
     };

@@ -20,7 +20,7 @@ import type {
   BlueprintNode,
   FileRef,
 } from './types';
-import { nodeId } from './factory';
+import { uid } from './factory';
 
 const SESSION_KEY = 'builder-v2:session:v1';
 const LEGACY_CONTRACT_KEY = 'builder-v2:contract:v1';
@@ -36,8 +36,16 @@ export function normaliseNode(n: unknown): BlueprintNode | null {
   const anyN = n as Record<string, unknown>;
   if (typeof anyN.type !== 'string') return null;
   const kids = Array.isArray(anyN.children) ? anyN.children : [];
+  // Migrate older stored sessions: the pre-split handle lived on `id`, now
+  // it's `_uid` (same string value → collapse state etc. still matches).
+  // `nodeId` (public key) is preserved when present.
+  const storedUid =
+    (typeof anyN._uid === 'string' && anyN._uid) ||
+    (typeof anyN.id === 'string' && anyN.id) ||
+    '';
   return {
-    id: typeof anyN.id === 'string' && anyN.id ? anyN.id : nodeId(),
+    _uid: storedUid || uid(),
+    nodeId: typeof anyN.nodeId === 'string' && anyN.nodeId ? anyN.nodeId : undefined,
     type: anyN.type,
     props: (anyN.props && typeof anyN.props === 'object')
       ? (anyN.props as Record<string, unknown>)

@@ -20,7 +20,7 @@ const contract: BlueprintDocument = {
   version: '1.0',
   root: {
     type: 'form',
-    id: 'lifecycle-form',
+    nodeId: 'lifecycle-form',
     children: [
       { type: 'field', props: { name: 'name', label: 'Name' } },
       { type: 'field', props: { name: 'email', label: 'Email', type: 'email' } },

@@ -88,7 +88,7 @@ export function useFileOps() {
     // on cancel — silent no-op, no toast.
     const suggested =
       fileRef?.name ??
-      (contract.root?.id ? `${contract.root.id}.json` : 'untitled.json');
+      (contract.root?.nodeId ? `${contract.root.nodeId}.json` : 'untitled.json');
     const result = await requestSaveAs(suggested, fileRef?.workspaceId);
     if (!result) return;
     const ws = getWorkspace(result.workspaceId);

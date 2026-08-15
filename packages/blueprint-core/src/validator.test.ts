@@ -87,8 +87,36 @@ describe('validate — atom prop schemas', () => {
     if (!noId.ok) {
       expect(noId.errors.some((e) => e.code === 'MISSING_ID')).toBe(true);
     }
-    const withId = validate(makeDoc({ type: 'form', id: 'my-form' }));
+    const withId = validate(makeDoc({ type: 'form', nodeId: 'my-form' }));
     expect(withId.ok).toBe(true);
+  });
+
+  it('flags a duplicate nodeId across the tree', () => {
+    const dup = validate(
+      makeDoc({
+        type: 'card',
+        nodeId: 'root-card',
+        children: [
+          { type: 'card', nodeId: 'dupe' },
+          { type: 'card', nodeId: 'dupe' },
+        ],
+      }),
+    );
+    expect(dup.ok).toBe(false);
+    if (!dup.ok) {
+      expect(dup.errors.some((e) => e.code === 'DUPLICATE_NODE_ID')).toBe(true);
+    }
+  });
+
+  it('accepts distinct nodeIds', () => {
+    const ok = validate(
+      makeDoc({
+        type: 'card',
+        nodeId: 'a',
+        children: [{ type: 'card', nodeId: 'b' }, { type: 'card', nodeId: 'c' }],
+      }),
+    );
+    expect(ok.ok).toBe(true);
   });
 
   it('date rejects bad ISO format', () => {

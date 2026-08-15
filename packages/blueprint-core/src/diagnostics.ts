@@ -51,7 +51,7 @@ export function valueAtPath(doc: unknown, pointer: string): unknown {
  */
 export type AncestorCrumb = {
   type: string;
-  id?: string;
+  nodeId?: string;
   index?: number;
   /** Cumulative pointer up to this crumb. */
   pointer: string;
@@ -81,7 +81,7 @@ export function nodeAncestors(doc: unknown, pointer: string): AncestorCrumb[] {
     if (cursor && typeof cursor === 'object' && typeof cursor.type === 'string') {
       crumbs.push({
         type: cursor.type,
-        id: cursor.id,
+        nodeId: cursor.nodeId,
         index: lastChildIndex,
         pointer: accumulated,
       });
@@ -95,7 +95,7 @@ export function nodeAncestors(doc: unknown, pointer: string): AncestorCrumb[] {
  * Format an ancestor chain as a developer-friendly breadcrumb:
  *   `root > stack[0] > form#kyc > field[2]`
  *
- * Atoms with an `id` show as `type#id`; positional atoms show as
+ * Atoms with a `nodeId` show as `type#nodeId`; positional atoms show as
  * `type[index]`; the document root is always labelled `root`.
  */
 export function humanizePath(doc: unknown, pointer: string): string {
@@ -103,7 +103,7 @@ export function humanizePath(doc: unknown, pointer: string): string {
   if (crumbs.length === 0) return 'root';
   return crumbs
     .map((c, i) => {
-      if (c.id) return `${c.type}#${c.id}`;
+      if (c.nodeId) return `${c.type}#${c.nodeId}`;
       if (i === 0) return c.type;
       return c.index !== undefined ? `${c.type}[${c.index}]` : c.type;
     })

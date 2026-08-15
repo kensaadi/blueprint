@@ -96,7 +96,7 @@ function removeById(
   targetId: string,
 ): BlueprintNode {
   const nextChildren = node.children
-    .filter((c) => c.id !== targetId)
+    .filter((c) => c._uid !== targetId)
     .map((c) => removeById(c, targetId));
   const changed =
     nextChildren.length !== node.children.length ||
@@ -127,27 +127,27 @@ export function builderReducer(
         return {
           ...state,
           contract: { ...state.contract, root: newNode },
-          selectedId: newNode.id,
+          selectedId: newNode._uid,
         };
       }
       // Child-drop path: walk the tree to the parent and append.
       if (state.contract.root === null) return state;
       const nextRoot = mapTree(state.contract.root, (n) =>
-        n.id === action.parentId
+        n._uid === action.parentId
           ? { ...n, children: [...n.children, newNode] }
           : n,
       );
       return {
         ...state,
         contract: { ...state.contract, root: nextRoot },
-        selectedId: newNode.id,
+        selectedId: newNode._uid,
       };
     }
 
     case 'updateProps': {
       if (state.contract.root === null) return state;
       const nextRoot = mapTree(state.contract.root, (n) =>
-        n.id === action.id
+        n._uid === action.id
           ? { ...n, props: { ...n.props, ...action.patch } }
           : n,
       );
@@ -155,18 +155,16 @@ export function builderReducer(
     }
 
     case 'setNodeId': {
+      // Renames the PUBLIC `nodeId` (the export/override key), matching the
+      // target by its internal `_uid`. Never touches `selectedId` — that
+      // tracks `_uid`, which a nodeId rename leaves untouched. Empty is a
+      // no-op (nodeId is mandatory in the Builder).
       if (state.contract.root === null) return state;
-      if (!action.newId || action.newId === action.id) return state;
+      if (!action.newId) return state;
       const nextRoot = mapTree(state.contract.root, (n) =>
-        n.id === action.id ? { ...n, id: action.newId } : n,
+        n._uid === action.id ? { ...n, nodeId: action.newId } : n,
       );
-      const nextSelected =
-        state.selectedId === action.id ? action.newId : state.selectedId;
-      return {
-        ...state,
-        contract: { ...state.contract, root: nextRoot },
-        selectedId: nextSelected,
-      };
+      return { ...state, contract: { ...state.contract, root: nextRoot } };
     }
 
     case 'setNodeType': {
@@ -174,7 +172,7 @@ export function builderReducer(
       const next = action.newType.trim();
       if (!next) return state;
       const nextRoot = mapTree(state.contract.root, (n) =>
-        n.id === action.id ? { ...n, type: next } : n,
+        n._uid === action.id ? { ...n, type: next } : n,
       );
       return { ...state, contract: { ...state.contract, root: nextRoot } };
     }
@@ -182,7 +180,7 @@ export function builderReducer(
     case 'setLayoutHint': {
       if (state.contract.root === null) return state;
       const nextRoot = mapTree(state.contract.root, (n) => {
-        if (n.id !== action.id) return n;
+        if (n._uid !== action.id) return n;
         if (action.value === undefined) {
           const copy = { ...n };
           delete (copy as Record<string, unknown>).layoutHint;
@@ -196,7 +194,7 @@ export function builderReducer(
     case 'setNodeAxis': {
       if (state.contract.root === null) return state;
       const nextRoot = mapTree(state.contract.root, (n) => {
-        if (n.id !== action.id) return n;
+        if (n._uid !== action.id) return n;
         // `undefined` deletes the axis so the exported JSON stays
         // minimal — Blueprint treats absence as "use default".
         const copy: BlueprintNode = { ...n };
@@ -213,7 +211,7 @@ export function builderReducer(
     case 'removeNode': {
       if (state.contract.root === null) return state;
       // Removing the root wipes the contract back to empty.
-      if (state.contract.root.id === action.id) {
+      if (state.contract.root._uid === action.id) {
         return {
           ...state,
           contract: { ...state.contract, root: null },
@@ -234,7 +232,7 @@ export function builderReducer(
       const root = state.contract.root;
       if (root === null) return state;
       // The root itself can't be moved — its identity is the tree.
-      if (root.id === action.id) return state;
+      if (root._uid === action.id) return state;
       // Locate the node to move; abort if not found.
       const moving = findNodeById(root, action.id);
       if (moving === null) return state;
@@ -253,10 +251,10 @@ export function builderReducer(
       // single tree walk so intermediate states never appear.
       const detached = removeById(root, action.id);
       const nextRoot = mapTree(detached, (n) => {
-        if (n.id !== action.newParentId) return n;
+        if (n._uid !== action.newParentId) return n;
         const before = action.insertBeforeId;
         if (before) {
-          const idx = n.children.findIndex((c) => c.id === before);
+          const idx = n.children.findIndex((c) => c._uid === before);
           if (idx >= 0) {
             const nextChildren = n.children.slice();
             nextChildren.splice(idx, 0, moving);
@@ -302,7 +300,7 @@ export function findNodeById(
   id: string | null,
 ): BlueprintNode | null {
   if (!node || !id) return null;
-  if (node.id === id) return node;
+  if (node._uid === id) return node;
   for (const child of node.children) {
     const hit = findNodeById(child, id);
     if (hit) return hit;
@@ -321,7 +319,7 @@ export function findParentOf(
 ): BlueprintNode | null {
   if (!root || !id) return null;
   for (const child of root.children) {
-    if (child.id === id) return root;
+    if (child._uid === id) return root;
     const hit = findParentOf(child, id);
     if (hit) return hit;
   }
@@ -344,7 +342,7 @@ export function isDescendantOrSelf(
   node: BlueprintNode,
   targetId: string,
 ): boolean {
-  if (node.id === targetId) return true;
+  if (node._uid === targetId) return true;
   for (const child of node.children) {
     if (isDescendantOrSelf(child, targetId)) return true;
   }

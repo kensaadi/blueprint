@@ -19,12 +19,12 @@ import type { BlueprintNode } from '@dashforge/blueprint-core';
 function wrap(root: BlueprintNode): BlueprintNode {
   return {
     type: 'stack',
-    id: 'root',
+    nodeId: 'root',
     props: { spacing: 'md' },
     children: [
-      { type: 'heading', id: 'title', props: { level: 1, children: 'Alive' } },
+      { type: 'heading', nodeId: 'title', props: { level: 1, children: 'Alive' } },
       root,
-      { type: 'text', id: 'trailer', props: { children: 'Also alive' } },
+      { type: 'text', nodeId: 'trailer', props: { children: 'Also alive' } },
     ],
   };
 }
@@ -49,7 +49,7 @@ describe('DashBlueprint fault isolation — customNode', () => {
     }
     const contract = {
       version: '1.0' as const,
-      root: wrap({ type: 'bomb', id: 'bomb-node', props: {} }),
+      root: wrap({ type: 'bomb', nodeId: 'bomb-node', props: {} }),
     };
     const { getByText, container } = render(
       <DashBlueprint {...contract} lib="tw" customNodes={{ bomb: BombComponent }} />,
@@ -73,7 +73,7 @@ describe('DashBlueprint fault isolation — slot override', () => {
     // id-first priority in compileNode.
     const contract = {
       version: '1.0' as const,
-      root: wrap({ type: 'placeholder', id: 'bomb-slot', props: {} }),
+      root: wrap({ type: 'placeholder', nodeId: 'bomb-slot', props: {} }),
     };
     const { getByText, container } = render(
       <DashBlueprint
@@ -96,7 +96,7 @@ describe('DashBlueprint fault isolation — visibility named rule', () => {
       version: '1.0' as const,
       root: wrap({
         type: 'text',
-        id: 'gated',
+        nodeId: 'gated',
         props: { children: 'should not appear' },
         visibility: { rule: 'brokenRule' },
       }),
@@ -127,7 +127,7 @@ describe('DashBlueprint fault isolation — intl.t', () => {
       version: '1.0' as const,
       root: wrap({
         type: 'text',
-        id: 'translated',
+        nodeId: 'translated',
         props: { children: { $t: 'welcome.title' } },
       }),
     };
@@ -157,7 +157,7 @@ describe('DashBlueprint fault isolation — icon.render', () => {
       version: '1.0' as const,
       root: wrap({
         type: 'button',
-        id: 'boom-btn',
+        nodeId: 'boom-btn',
         props: { label: 'Click me', icon: 'bomb' },
       }),
     };

@@ -21,16 +21,15 @@ import { ATOMS_REQUIRING_ID } from '@dashforge/blueprint-core';
  * We don't need cryptographic uniqueness; a random base36 tag is
  * enough for palette-scale usage and ships small in the exported JSON.
  */
-export function nodeId(): string {
+export function uid(): string {
   return 'n_' + Math.random().toString(36).slice(2, 10);
 }
 
 /**
- * Semantic id for atoms that require it (F-02 fix). `ATOMS_REQUIRING_ID`
- * — currently just `form` — surfaces its `node.id` as the runtime
- * lookup key. `n_XXXX` is legal but hostile: the user has to rename
- * every form before the contract makes sense. `form-a3k9` is legal
- * AND self-describing.
+ * Friendly default for the PUBLIC `nodeId` — `form-a3k9`, `select-9fx2`.
+ * Every node gets one on drop (nodeId is mandatory in the Builder); the
+ * designer renames it freely. Self-describing so a fresh contract reads
+ * sensibly before anyone touches it — unlike the opaque `_uid` handle.
  */
 function semanticId(type: AtomType): string {
   return `${type}-${Math.random().toString(36).slice(2, 6)}`;
@@ -156,9 +155,10 @@ function defaultPropsFor(type: AtomType): Record<string, unknown> {
  */
 export function createNode(type: AtomType): BlueprintNode {
   return {
-    id: ATOMS_REQUIRING_ID.has(type as never)
-      ? semanticId(type)
-      : nodeId(),
+    // Immutable internal handle (Builder-only, stripped on export) + a
+    // friendly public nodeId every node carries by default.
+    _uid: uid(),
+    nodeId: semanticId(type),
     type,
     props: defaultPropsFor(type),
     children: [],

@@ -23,7 +23,7 @@ const doc: BlueprintDocument = {
   lib: 'tw',
   root: {
     type: 'form',
-    id: 'signup',
+    nodeId: 'signup',
     props: {},
     children: [
       { type: 'field', props: { name: 'email', label: 'Email' } },

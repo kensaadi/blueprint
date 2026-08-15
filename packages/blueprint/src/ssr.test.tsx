@@ -20,12 +20,12 @@ const contract = {
   version: '1.0' as const,
   root: {
     type: 'section',
-    id: 'landing',
+    nodeId: 'landing',
     props: { spacing: 'lg' },
     children: [
-      { type: 'heading', id: 'title', props: { level: 1, children: 'Server-rendered' } },
-      { type: 'text', id: 'body', props: { children: 'Hello from the server.' } },
-      { type: 'button', id: 'cta', props: { label: 'Go' } },
+      { type: 'heading', nodeId: 'title', props: { level: 1, children: 'Server-rendered' } },
+      { type: 'text', nodeId: 'body', props: { children: 'Hello from the server.' } },
+      { type: 'button', nodeId: 'cta', props: { label: 'Go' } },
     ],
   } satisfies BlueprintNode,
 };
@@ -53,7 +53,7 @@ describe('DashBlueprint — SSR sanity', () => {
       version: '1.0' as const,
       root: {
         type: 'heading',
-        id: 'welcome',
+        nodeId: 'welcome',
         props: { level: 1, children: { $t: 'welcome.title' } },
       } satisfies BlueprintNode,
     };
@@ -72,7 +72,7 @@ describe('DashBlueprint — SSR sanity', () => {
       version: '1.0' as const,
       root: {
         type: 'heading',
-        id: 'welcome',
+        nodeId: 'welcome',
         props: { level: 1, children: { $t: 'welcome.title' } },
       } satisfies BlueprintNode,
     };

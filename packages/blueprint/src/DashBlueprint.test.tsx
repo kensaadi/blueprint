@@ -85,7 +85,7 @@ describe('DashBlueprint — extension dimensions', () => {
   it('slot override wins over native render (by id)', () => {
     const doc: BlueprintDocument = {
       version: '1.0',
-      root: { type: 'card', id: 'foo', children: [{ type: 'heading', props: { level: 1, children: 'NATIVE' } }] },
+      root: { type: 'card', nodeId: 'foo', children: [{ type: 'heading', props: { level: 1, children: 'NATIVE' } }] },
     };
     const Override = <div data-testid="overridden">REPLACED</div>;
     const { getByTestId, container } = render(
@@ -98,7 +98,7 @@ describe('DashBlueprint — extension dimensions', () => {
   it('slots={} escape hatch resolves kebab-case ids', () => {
     const doc: BlueprintDocument = {
       version: '1.0',
-      root: { type: 'card', id: 'kebab-case-id' },
+      root: { type: 'card', nodeId: 'kebab-case-id' },
     };
     const Override = <div data-testid="slot-override">SLOT</div>;
     const { getByTestId } = render(
@@ -118,7 +118,7 @@ describe('DashBlueprint — extension dimensions', () => {
             type: 'section',
             children: [
               { type: 'text', props: { children: 'sibling-before' } },
-              { type: 'card', id: 'deep-target' },
+              { type: 'card', nodeId: 'deep-target' },
               { type: 'text', props: { children: 'sibling-after' } },
             ],
           }],
@@ -140,11 +140,11 @@ describe('DashBlueprint — extension dimensions', () => {
       root: {
         type: 'stack',
         children: [
-          { type: 'card', id: 'first' },
+          { type: 'card', nodeId: 'first' },
           { type: 'section', children: [
-            { type: 'card', id: 'second' },
+            { type: 'card', nodeId: 'second' },
             { type: 'section', children: [
-              { type: 'card', id: 'third' },
+              { type: 'card', nodeId: 'third' },
             ]},
           ]},
         ],
@@ -172,7 +172,7 @@ describe('DashBlueprint — extension dimensions', () => {
       root: {
         type: 'card',
         children: [{
-          type: 'section', id: 'inner',
+          type: 'section', nodeId: 'inner',
           children: [
             { type: 'text', props: { children: 'INNER-NATIVE-CONTENT' } },
           ],
@@ -190,7 +190,7 @@ describe('DashBlueprint — extension dimensions', () => {
   it('slots[id] wins over the top-level prop with the same id (precedence)', () => {
     const doc: BlueprintDocument = {
       version: '1.0',
-      root: { type: 'card', id: 'foo' },
+      root: { type: 'card', nodeId: 'foo' },
     };
     const Top = <div data-testid="top">TOP</div>;
     const Slot = <div data-testid="slot">SLOT</div>;

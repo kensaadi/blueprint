@@ -20,7 +20,7 @@ const contract: BlueprintDocument = {
   version: '1.0',
   root: {
     type: 'form',
-    id: 'gap-form',
+    nodeId: 'gap-form',
     children: [
       { type: 'field', props: { name: 'firstName', label: 'First name', required: true } },
       { type: 'field', props: { name: 'email', label: 'Email', type: 'email', required: true } },

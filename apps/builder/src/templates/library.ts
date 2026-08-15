@@ -12,6 +12,23 @@
  * canvas.
  */
 import type { Contract } from '../state/types';
+import { uid } from '../state/factory';
+
+/**
+ * Mint the Builder-internal `_uid` on every node of a hand-authored
+ * template. Templates carry only the public `nodeId` (they're authored
+ * like exported contracts); the Builder needs a `_uid` handle on each
+ * node for selection / drop targets, so we stamp one at module load.
+ */
+function hydrate(node: Record<string, unknown>): Contract['root'] {
+  return {
+    ...node,
+    _uid: uid(),
+    children: Array.isArray(node.children)
+      ? node.children.map((c) => hydrate(c as Record<string, unknown>))
+      : [],
+  } as Contract['root'];
+}
 // `buildKitchenSink` is intentionally NOT surfaced in the templates
 // grid — it exists purely as a testing artefact for the round-trip
 // snapshot suite (see `src/builder/state/roundTrip.test.ts`).
@@ -45,24 +62,24 @@ function n(id: string): string {
 
 export const LOGIN: Contract = {
   version: '1.0',
-  root: {
-    id: 'login',
+  root: hydrate({
+    nodeId: 'login',
     type: 'form',
     props: {},
     children: [
       {
-        id: n('login-stack'),
+        nodeId: n('login-stack'),
         type: 'stack',
         props: { direction: 'column', spacing: 'md' },
         children: [
           {
-            id: n('login-heading'),
+            nodeId: n('login-heading'),
             type: 'heading',
             props: { level: 2, children: 'Sign in' },
             children: [],
           },
           {
-            id: n('login-email'),
+            nodeId: n('login-email'),
             type: 'field',
             props: {
               name: 'email',
@@ -74,7 +91,7 @@ export const LOGIN: Contract = {
             children: [],
           },
           {
-            id: n('login-password'),
+            nodeId: n('login-password'),
             type: 'field',
             props: {
               name: 'password',
@@ -85,13 +102,13 @@ export const LOGIN: Contract = {
             children: [],
           },
           {
-            id: n('login-remember'),
+            nodeId: n('login-remember'),
             type: 'checkbox',
             props: { name: 'remember', label: 'Remember me on this device' },
             children: [],
           },
           {
-            id: n('login-submit'),
+            nodeId: n('login-submit'),
             type: 'submit',
             props: { label: 'Sign in', variant: 'solid' },
             children: [],
@@ -100,42 +117,42 @@ export const LOGIN: Contract = {
       },
     ],
     slots: undefined,
-  } as Contract['root'],
+  }),
 };
 
 export const KYC: Contract = {
   version: '1.0',
-  root: {
-    id: 'kyc',
+  root: hydrate({
+    nodeId: 'kyc',
     type: 'form',
     props: {},
     children: [
       {
-        id: n('kyc-heading'),
+        nodeId: n('kyc-heading'),
         type: 'heading',
         props: { level: 2, children: 'Identity verification' },
         children: [],
       },
       {
-        id: n('kyc-firstName'),
+        nodeId: n('kyc-firstName'),
         type: 'field',
         props: { name: 'firstName', label: 'First name', required: true },
         children: [],
       },
       {
-        id: n('kyc-lastName'),
+        nodeId: n('kyc-lastName'),
         type: 'field',
         props: { name: 'lastName', label: 'Last name', required: true },
         children: [],
       },
       {
-        id: n('kyc-birth'),
+        nodeId: n('kyc-birth'),
         type: 'date',
         props: { name: 'birthDate', label: 'Date of birth', required: true },
         children: [],
       },
       {
-        id: n('kyc-country'),
+        nodeId: n('kyc-country'),
         type: 'select',
         props: {
           name: 'country',
@@ -151,7 +168,7 @@ export const KYC: Contract = {
         children: [],
       },
       {
-        id: n('kyc-taxid'),
+        nodeId: n('kyc-taxid'),
         type: 'field',
         props: {
           name: 'taxId',
@@ -163,7 +180,7 @@ export const KYC: Contract = {
         children: [],
       },
       {
-        id: n('kyc-consent'),
+        nodeId: n('kyc-consent'),
         type: 'checkbox',
         props: {
           name: 'consent',
@@ -172,13 +189,13 @@ export const KYC: Contract = {
         children: [],
       },
       {
-        id: n('kyc-submit'),
+        nodeId: n('kyc-submit'),
         type: 'submit',
         props: { label: 'Submit for review', variant: 'solid' },
         children: [],
       },
     ],
-  } as Contract['root'],
+  }),
 };
 
 /**
@@ -189,24 +206,24 @@ export const KYC: Contract = {
  */
 export const LANDING: Contract = {
   version: '1.0',
-  root: {
-    id: 'landing',
+  root: hydrate({
+    nodeId: 'landing',
     type: 'section',
     props: { spacing: 'lg' },
     children: [
       {
-        id: n('land-hero'),
+        nodeId: n('land-hero'),
         type: 'stack',
         props: { direction: 'column', spacing: 'md', align: 'center' },
         children: [
           {
-            id: n('land-hero-badge'),
+            nodeId: n('land-hero-badge'),
             type: 'chip',
             props: { label: 'New · v1.0', color: 'primary' },
             children: [],
           },
           {
-            id: n('land-hero-title'),
+            nodeId: n('land-hero-title'),
             type: 'heading',
             props: {
               level: 1,
@@ -216,7 +233,7 @@ export const LANDING: Contract = {
             children: [],
           },
           {
-            id: n('land-hero-sub'),
+            nodeId: n('land-hero-sub'),
             type: 'text',
             props: {
               size: 'lg',
@@ -228,18 +245,18 @@ export const LANDING: Contract = {
             children: [],
           },
           {
-            id: n('land-hero-ctas'),
+            nodeId: n('land-hero-ctas'),
             type: 'stack',
             props: { direction: 'row', spacing: 'sm', justify: 'center' },
             children: [
               {
-                id: n('land-cta-primary'),
+                nodeId: n('land-cta-primary'),
                 type: 'button',
                 props: { label: 'Get started', variant: 'solid' },
                 children: [],
               },
               {
-                id: n('land-cta-secondary'),
+                nodeId: n('land-cta-secondary'),
                 type: 'button',
                 props: { label: 'Read the docs', variant: 'ghost' },
                 children: [],
@@ -248,31 +265,31 @@ export const LANDING: Contract = {
           },
         ],
       },
-      { id: n('land-div-1'), type: 'divider', props: {}, children: [] },
+      { nodeId: n('land-div-1'), type: 'divider', props: {}, children: [] },
       {
-        id: n('land-features-title'),
+        nodeId: n('land-features-title'),
         type: 'heading',
         props: { level: 2, align: 'center', children: 'Why teams pick us' },
         children: [],
       },
       {
-        id: n('land-features-grid'),
+        nodeId: n('land-features-grid'),
         type: 'grid',
         props: { cols: 3, gap: 'md' },
         children: [
           {
-            id: n('land-feat-1'),
+            nodeId: n('land-feat-1'),
             type: 'card',
             props: { p: 'md', rounded: 'lg', elevation: 1 },
             children: [
               {
-                id: n('land-feat-1-h'),
+                nodeId: n('land-feat-1-h'),
                 type: 'heading',
                 props: { level: 3, children: 'Declarative' },
                 children: [],
               },
               {
-                id: n('land-feat-1-t'),
+                nodeId: n('land-feat-1-t'),
                 type: 'text',
                 props: {
                   children: 'A JSON contract renders everywhere the runtime does.',
@@ -282,18 +299,18 @@ export const LANDING: Contract = {
             ],
           },
           {
-            id: n('land-feat-2'),
+            nodeId: n('land-feat-2'),
             type: 'card',
             props: { p: 'md', rounded: 'lg', elevation: 1 },
             children: [
               {
-                id: n('land-feat-2-h'),
+                nodeId: n('land-feat-2-h'),
                 type: 'heading',
                 props: { level: 3, children: 'Two flavors' },
                 children: [],
               },
               {
-                id: n('land-feat-2-t'),
+                nodeId: n('land-feat-2-t'),
                 type: 'text',
                 props: {
                   children: 'Tailwind or Material — swap the `lib` prop, keep the contract.',
@@ -303,18 +320,18 @@ export const LANDING: Contract = {
             ],
           },
           {
-            id: n('land-feat-3'),
+            nodeId: n('land-feat-3'),
             type: 'card',
             props: { p: 'md', rounded: 'lg', elevation: 1 },
             children: [
               {
-                id: n('land-feat-3-h'),
+                nodeId: n('land-feat-3-h'),
                 type: 'heading',
                 props: { level: 3, children: 'Escape hatch' },
                 children: [],
               },
               {
-                id: n('land-feat-3-t'),
+                nodeId: n('land-feat-3-t'),
                 type: 'text',
                 props: {
                   children:
@@ -326,9 +343,9 @@ export const LANDING: Contract = {
           },
         ],
       },
-      { id: n('land-div-2'), type: 'divider', props: {}, children: [] },
+      { nodeId: n('land-div-2'), type: 'divider', props: {}, children: [] },
       {
-        id: n('land-faq-title'),
+        nodeId: n('land-faq-title'),
         type: 'heading',
         props: { level: 2, align: 'center', children: 'Frequently asked' },
         children: [],
@@ -336,7 +353,7 @@ export const LANDING: Contract = {
       {
         // Panel bodies live in `children`, one per item — the accordion
         // binding zips `items[i]` with `Children.toArray(children)[i]`.
-        id: n('land-faq'),
+        nodeId: n('land-faq'),
         type: 'accordion',
         props: {
           type: 'single',
@@ -348,7 +365,7 @@ export const LANDING: Contract = {
         },
         children: [
           {
-            id: n('land-faq-a1'),
+            nodeId: n('land-faq-a1'),
             type: 'text',
             props: {
               children:
@@ -357,7 +374,7 @@ export const LANDING: Contract = {
             children: [],
           },
           {
-            id: n('land-faq-a2'),
+            nodeId: n('land-faq-a2'),
             type: 'text',
             props: {
               children:
@@ -366,7 +383,7 @@ export const LANDING: Contract = {
             children: [],
           },
           {
-            id: n('land-faq-a3'),
+            nodeId: n('land-faq-a3'),
             type: 'text',
             props: {
               children:
@@ -376,37 +393,37 @@ export const LANDING: Contract = {
           },
         ],
       },
-      { id: n('land-div-3'), type: 'divider', props: {}, children: [] },
+      { nodeId: n('land-div-3'), type: 'divider', props: {}, children: [] },
       {
-        id: n('land-footer'),
+        nodeId: n('land-footer'),
         type: 'stack',
         props: { direction: 'row', spacing: 'md', justify: 'between', align: 'center' },
         children: [
           {
-            id: n('land-footer-copy'),
+            nodeId: n('land-footer-copy'),
             type: 'text',
             props: { size: 'sm', tone: 'muted', children: '© 2026 Dashforge' },
             children: [],
           },
           {
-            id: n('land-footer-links'),
+            nodeId: n('land-footer-links'),
             type: 'stack',
             props: { direction: 'row', spacing: 'sm' },
             children: [
               {
-                id: n('land-footer-privacy'),
+                nodeId: n('land-footer-privacy'),
                 type: 'button',
                 props: { label: 'Privacy', variant: 'ghost' },
                 children: [],
               },
               {
-                id: n('land-footer-terms'),
+                nodeId: n('land-footer-terms'),
                 type: 'button',
                 props: { label: 'Terms', variant: 'ghost' },
                 children: [],
               },
               {
-                id: n('land-footer-contact'),
+                nodeId: n('land-footer-contact'),
                 type: 'button',
                 props: { label: 'Contact', variant: 'ghost' },
                 children: [],
@@ -416,47 +433,47 @@ export const LANDING: Contract = {
         ],
       },
     ],
-  } as Contract['root'],
+  }),
 };
 
 export const CHECKOUT: Contract = {
   version: '1.0',
-  root: {
-    id: 'checkout',
+  root: hydrate({
+    nodeId: 'checkout',
     type: 'form',
     props: {},
     children: [
       {
-        id: n('co-heading'),
+        nodeId: n('co-heading'),
         type: 'heading',
         props: { level: 2, children: 'Checkout' },
         children: [],
       },
       {
-        id: n('co-section-shipping'),
+        nodeId: n('co-section-shipping'),
         type: 'section',
         props: { spacing: 'md' },
         children: [
           {
-            id: n('co-shipping-heading'),
+            nodeId: n('co-shipping-heading'),
             type: 'heading',
             props: { level: 3, children: 'Shipping address' },
             children: [],
           },
           {
-            id: n('co-street'),
+            nodeId: n('co-street'),
             type: 'field',
             props: { name: 'street', label: 'Street', required: true },
             children: [],
           },
           {
-            id: n('co-city'),
+            nodeId: n('co-city'),
             type: 'field',
             props: { name: 'city', label: 'City', required: true },
             children: [],
           },
           {
-            id: n('co-zip'),
+            nodeId: n('co-zip'),
             type: 'field',
             props: { name: 'zip', label: 'ZIP / Postal code', required: true },
             children: [],
@@ -464,18 +481,18 @@ export const CHECKOUT: Contract = {
         ],
       },
       {
-        id: n('co-section-payment'),
+        nodeId: n('co-section-payment'),
         type: 'section',
         props: { spacing: 'md' },
         children: [
           {
-            id: n('co-payment-heading'),
+            nodeId: n('co-payment-heading'),
             type: 'heading',
             props: { level: 3, children: 'Payment' },
             children: [],
           },
           {
-            id: n('co-method'),
+            nodeId: n('co-method'),
             type: 'radio',
             props: {
               name: 'paymentMethod',
@@ -490,14 +507,14 @@ export const CHECKOUT: Contract = {
             children: [],
           },
           {
-            id: n('co-card-number'),
+            nodeId: n('co-card-number'),
             type: 'field',
             props: { name: 'cardNumber', label: 'Card number' },
             visibility: { field: '$form.paymentMethod', eq: 'card' },
             children: [],
           },
           {
-            id: n('co-card-exp'),
+            nodeId: n('co-card-exp'),
             type: 'field',
             props: { name: 'cardExpiry', label: 'Expiry (MM / YY)' },
             visibility: { field: '$form.paymentMethod', eq: 'card' },
@@ -506,13 +523,13 @@ export const CHECKOUT: Contract = {
         ],
       },
       {
-        id: n('co-submit'),
+        nodeId: n('co-submit'),
         type: 'submit',
         props: { label: 'Place order', variant: 'solid' },
         children: [],
       },
     ],
-  } as Contract['root'],
+  }),
 };
 
 export const TEMPLATES: Template[] = [

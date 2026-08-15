@@ -27,12 +27,12 @@ describe('customNodes.grid — no compiler-prop leak', () => {
     const doc: BlueprintDocument = {
       version: '1.0',
       root: {
-        id: 'g',
+        nodeId: 'g',
         type: 'grid',
         props: { cols: 2 },
         children: [
-          { id: 'a', type: 'card', props: {}, layoutHint: { size: 6 } },
-          { id: 'b', type: 'card', props: {}, layoutHint: { size: 6 } },
+          { nodeId: 'a', type: 'card', props: {}, layoutHint: { size: 6 } },
+          { nodeId: 'b', type: 'card', props: {}, layoutHint: { size: 6 } },
         ],
       },
     };
@@ -57,11 +57,11 @@ describe('customNodes.grid — no compiler-prop leak', () => {
     const doc: BlueprintDocument = {
       version: '1.0',
       root: {
-        id: 'g',
+        nodeId: 'g',
         type: 'grid',
         props: { cols: 12 },
         children: [
-          { id: 'a', type: 'card', props: {}, layoutHint: { size: 4 } },
+          { nodeId: 'a', type: 'card', props: {}, layoutHint: { size: 4 } },
         ],
       },
     };

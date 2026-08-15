@@ -20,7 +20,12 @@ export type BlueprintDocument = {
 };
 
 export type BlueprintNode = {
-  id?: string;
+  /**
+   * Public, human-authored addressing key — used for slot overrides
+   * (`slots[nodeId]`) and form-config lookup (`forms[nodeId]`). Optional
+   * in the contract; unique across the tree when present.
+   */
+  nodeId?: string;
   type: string;
   props?: Record<string, unknown>;
   children?: BlueprintNode[];

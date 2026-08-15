@@ -75,13 +75,13 @@ function renderInner(node: BlueprintNode, ctx: CompileContext, key: number): Rea
   //    respect node.visibility). Wrapped in a NodeErrorBoundary so a
   //    throwing user element degrades to an inline fallback instead of
   //    taking the whole tree down.
-  if (node.id && ctx.slotOverrides[node.id] !== undefined) {
-    const override = ctx.slotOverrides[node.id];
+  if (node.nodeId && ctx.slotOverrides[node.nodeId] !== undefined) {
+    const override = ctx.slotOverrides[node.nodeId];
     const rendered = isValidElement(override)
       ? cloneElement(override as ReactElement)
       : <>{override}</>;
     return (
-      <NodeErrorBoundary key={key} scope="slot" nodeId={node.id} nodeType={node.type}>
+      <NodeErrorBoundary key={key} scope="slot" nodeId={node.nodeId} nodeType={node.type}>
         {rendered}
       </NodeErrorBoundary>
     );
@@ -109,7 +109,7 @@ function renderInner(node: BlueprintNode, ctx: CompileContext, key: number): Rea
   if (ctx.customNodes?.[node.type]) {
     const Custom = ctx.customNodes[node.type];
     return (
-      <NodeErrorBoundary key={key} scope="customNode" nodeType={node.type} nodeId={node.id}>
+      <NodeErrorBoundary key={key} scope="customNode" nodeType={node.type} nodeId={node.nodeId}>
         {wrap(Custom, undefined, { ...node.props, ...accessProps, ...disabledProps }, compiledChildren, hasNestedChildren)}
       </NodeErrorBoundary>
     );
@@ -119,7 +119,7 @@ function renderInner(node: BlueprintNode, ctx: CompileContext, key: number): Rea
   //    the resolved FormConfig as an extra prop from the compiler.
   if (node.type === 'form') {
     const FormBinding = ctx.registry.form;
-    const formConfig = node.id ? ctx.forms?.[node.id] : undefined;
+    const formConfig = node.nodeId ? ctx.forms?.[node.nodeId] : undefined;
     return (
       <FormBinding key={key} formConfig={formConfig} {...accessProps} {...disabledProps}>
         {compiledChildren}
@@ -159,9 +159,9 @@ function renderUnknown(node: BlueprintNode, key: number): ReactNode {
   return (
     <div key={key} className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700">
       Unknown node type: <code>{node.type}</code>
-      {node.id && (
+      {node.nodeId && (
         <>
-          {' '}with id <code>{node.id}</code>
+          {' '}with nodeId <code>{node.nodeId}</code>
         </>
       )}
       . Add it to <code>customNodes</code>, override via slot prop, or correct the contract.

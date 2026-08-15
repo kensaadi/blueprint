@@ -25,7 +25,9 @@ export type PaletteDragData = { kind: 'palette'; atomType: string };
 // Drag of an existing node in the canvas tree — used for reorder /
 // re-parenting. The reducer refuses cyclic drops (parent into own
 // descendant); this data shape doesn't need to encode that guard.
-export type ExistingNodeDragData = { kind: 'existing'; nodeId: string; atomType: string };
+// `uid` is the dragged node's internal handle (BlueprintNode._uid), used
+// to address it in `moveNode`. Not the public `nodeId`.
+export type ExistingNodeDragData = { kind: 'existing'; uid: string; atomType: string };
 // `parentId: null` targets the empty root drop zone (creates the root
 // atom on first drop). Non-null targets a container's inner area.
 export type ContainerDropData = { kind: 'container'; parentId: string | null };
@@ -103,7 +105,7 @@ export function DndProvider({ children }: { children: ReactNode }) {
       // Insert-before another sibling under `parentId`.
       dispatch({
         type: 'moveNode',
-        id: src.nodeId,
+        id: src.uid,
         newParentId: dst.parentId,
         insertBeforeId: dst.insertBeforeId,
       });
@@ -113,7 +115,7 @@ export function DndProvider({ children }: { children: ReactNode }) {
       // Moving into the empty root drop zone is meaningless once a
       // root already exists — the reducer no-ops on null parent.
       if (dst.parentId === null) return;
-      dispatch({ type: 'moveNode', id: src.nodeId, newParentId: dst.parentId });
+      dispatch({ type: 'moveNode', id: src.uid, newParentId: dst.parentId });
     }
   };
 

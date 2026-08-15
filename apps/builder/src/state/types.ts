@@ -20,11 +20,17 @@ export type AtomType = string;
  * A single node in the contract tree.
  *
  * Envelope shape matches Blueprint core's `nodeSchema` (see
- * blueprint-core/schema.ts). `id` is Builder-generated (nano-like) and
- * stable across edits — used for selection, drop targets, and
- * inspector wiring. It also identifies the node in the exported JSON
- * so `<DashBlueprint forms>`, `<DashBlueprint slots>` etc. can address
- * it by name.
+ * blueprint-core/schema.ts), plus a Builder-only `_uid`.
+ *
+ * `_uid` is the Builder's IMMUTABLE internal handle — Builder-generated,
+ * stable across edits, used for selection, drop targets, React keys, and
+ * inspector wiring. It is STRIPPED on export (never leaves the Builder).
+ *
+ * `nodeId` is the PUBLIC, human-authored addressing key that ships in the
+ * exported JSON — what `<DashBlueprint forms>` / `<DashBlueprint slots>`
+ * address the node by. The Builder always seeds a friendly default; the
+ * designer can rename it freely (it must stay unique). Decoupling the two
+ * means renaming `nodeId` never disturbs the internal handle.
  *
  * `props` is opaque here — per-atom shapes live in Blueprint core's
  * `ATOM_PROP_SCHEMAS`; the schema-driven Inspector reads those to
@@ -35,7 +41,10 @@ export type AtomType = string;
  * can edit them independently of the atom's props map.
  */
 export type BlueprintNode = {
-  id: string;
+  /** Immutable Builder-internal handle. Stripped on export. */
+  _uid: string;
+  /** Public, human-authored addressing key. Exported; unique per contract. */
+  nodeId?: string;
   type: AtomType;
   props: Record<string, unknown>;
   children: BlueprintNode[];

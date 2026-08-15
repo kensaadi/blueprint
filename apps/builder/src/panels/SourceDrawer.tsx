@@ -13,15 +13,16 @@ import { useMemo, useState } from 'react';
 import { Typography, Button } from '@dashforge/tw';
 import { PanelShell } from '../primitives/PanelShell';
 import { useBuilderState } from '../state/BuilderStateContext';
-import { copyContract } from '../state/exportContract';
+import { copyContract, stripUid } from '../state/exportContract';
 
 type CopyState = 'idle' | 'ok' | 'fail';
 
 export function SourceDrawer() {
   const { contract } = useBuilderState();
-  // JSON.stringify is deterministic here — no cycles, no functions.
-  // Regenerating on every action is fine at palette-scale contracts.
-  const lines = useMemo(() => tokenizeJson(contract), [contract]);
+  // Show the EXPORT shape (Builder-only `_uid` stripped) so the preview
+  // matches what Copy / Download produce. JSON.stringify is deterministic
+  // here — no cycles, no functions.
+  const lines = useMemo(() => tokenizeJson(stripUid(contract)), [contract]);
   const [copyState, setCopyState] = useState<CopyState>('idle');
 
   const onCopy = () => {

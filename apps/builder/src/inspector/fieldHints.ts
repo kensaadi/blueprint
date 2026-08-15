@@ -19,7 +19,7 @@
 
 const AXIS_HINTS: Record<string, string> = {
   // ─── Envelope ────────────────────────────────────────────────
-  'node.id':
+  'nodeId':
     "A unique name for this element. Use short, descriptive tags like 'checkout' or 'shipping-address'. Required for forms — it's the name your code uses to attach validation and read submitted values.",
   type:
     "The kind of element this is (a text input, a button, a section…). Determines which settings appear below.",
@@ -167,7 +167,7 @@ export function hintFor(key: string, atomType?: string): string | undefined {
 // ─────────────────────────────────────────────────────────────────
 
 const PLACEHOLDERS: Record<string, string> = {
-  'node.id': 'e.g. checkout-form',
+  'nodeId': 'e.g. checkout-form',
   name: 'e.g. email',
   label: 'e.g. Email address',
   placeholder: 'e.g. you@example.com',

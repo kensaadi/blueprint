@@ -142,18 +142,18 @@ export function CommandPalette({
         n: import('../state/types').BlueprintNode,
       ): boolean => {
         chain.push(n);
-        if (n.id === selectedId) return true;
+        if (n._uid === selectedId) return true;
         for (const c of n.children) if (walk(c)) return true;
         chain.pop();
         return false;
       };
       if (walk(contract.root)) {
         for (let i = chain.length - 1; i >= 0; i--) {
-          if (CONTAINER_TYPES.has(chain[i].type)) return chain[i].id;
+          if (CONTAINER_TYPES.has(chain[i].type)) return chain[i]._uid;
         }
       }
     }
-    if (CONTAINER_TYPES.has(contract.root.type)) return contract.root.id;
+    if (CONTAINER_TYPES.has(contract.root.type)) return contract.root._uid;
     return null;
   }, [contract.root, selectedId]);
 
@@ -298,7 +298,7 @@ export function CommandPalette({
       addLabelSuffix = ' (as root)';
     } else if (parentIdForAdd === selectedId) {
       addLabelSuffix = ' (into selection)';
-    } else if (contract.root && parentIdForAdd === contract.root.id) {
+    } else if (contract.root && parentIdForAdd === contract.root._uid) {
       addLabelSuffix = ' (into root)';
     } else {
       addLabelSuffix = ` (into ${parentIdForAdd})`;
@@ -366,14 +366,14 @@ export function CommandPalette({
         const n = node.children.length;
         const count = n > 0 ? ` · ${n} item${n === 1 ? '' : 's'}` : '';
         cmds.push({
-          id: 'nav:' + node.id,
+          id: 'nav:' + node._uid,
           section: 'Navigate',
-          label: `Select ${node.type}${count} · ${node.id}`,
+          label: `Select ${node.type}${count} · ${node.nodeId}`,
           hint: ancestors.length > 0 ? ancestors.join(' › ') : undefined,
           icon: iconForType(node.type),
-          handler: () => { dispatch({ type: 'select', id: node.id }); close(); },
+          handler: () => { dispatch({ type: 'select', id: node._uid }); close(); },
         });
-        const nextAncestors = [...ancestors, node.id];
+        const nextAncestors = [...ancestors, node._uid];
         for (const c of node.children) walk(c, nextAncestors);
       };
       walk(contract.root, []);

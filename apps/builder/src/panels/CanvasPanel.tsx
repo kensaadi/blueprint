@@ -419,15 +419,15 @@ function NodeCard({
   skipStackMargin?: boolean;
 }) {
   const dispatch = useBuilderDispatch();
-  const isSelected = node.id === selectedId;
+  const isSelected = node._uid === selectedId;
   // Transient palette outline. Loses to real selection if both point
   // at the same node — the selection ring is more informative.
-  const isHovered = !isSelected && node.id === hoveredId;
+  const isHovered = !isSelected && node._uid === hoveredId;
   const isContainer = CONTAINER_TYPES.has(node.type);
   const icon = iconForType(node.type);
   const childCount = node.children?.length ?? 0;
   const canCollapse = isContainer && childCount > 0;
-  const collapsedRaw = useIsCollapsed(node.id);
+  const collapsedRaw = useIsCollapsed(node._uid);
   const isCollapsed = canCollapse && collapsedRaw;
   const toggleCollapse = useToggleCollapse();
 
@@ -453,9 +453,9 @@ function NodeCard({
   // Non-root nodes become drag sources. Payload declares "this is an
   // existing node" so the reducer routes into `moveNode` instead of
   // `addNode` at drop time.
-  const dragData: ExistingNodeDragData = { kind: 'existing', nodeId: node.id, atomType: node.type };
+  const dragData: ExistingNodeDragData = { kind: 'existing', uid: node._uid, atomType: node.type };
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `node:${node.id}`,
+    id: `node:${node._uid}`,
     data: dragData,
     disabled: isRoot,
   });
@@ -465,12 +465,12 @@ function NodeCard({
       ref={isRoot ? undefined : setNodeRef}
       {...(isRoot ? {} : attributes)}
       {...(isRoot ? {} : listeners)}
-      data-node-id={node.id}
+      data-node-id={node._uid}
       onClick={(e) => {
         // Stop propagation so clicking a nested node doesn't bubble to
         // the outer canvas deselect handler.
         e.stopPropagation();
-        dispatch({ type: 'select', id: node.id });
+        dispatch({ type: 'select', id: node._uid });
       }}
       className={`rounded-lg border transition-colors${flash ? ' bd-flash' : ''}`}
       style={{
@@ -501,7 +501,7 @@ function NodeCard({
               // Don't select the card + don't start a drag on the parent
               // when the user just meant to fold/unfold.
               e.stopPropagation();
-              toggleCollapse(node.id);
+              toggleCollapse(node._uid);
             }}
             onPointerDown={(e) => e.stopPropagation()}
             className="flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors"
@@ -531,7 +531,7 @@ function NodeCard({
           className="rounded px-1.5 py-0.5 font-mono text-[10px]"
           style={{ background: 'var(--bd-item)', color: 'var(--bd-text-faint)' }}
         >
-          {node.id}
+          {node.nodeId}
         </span>
         {isCollapsed && (
           <span
@@ -585,7 +585,7 @@ function NodeCard({
               aria-hidden
             />
           )}
-          <NodeDeleteButton nodeId={node.id} visible={isSelected} />
+          <NodeDeleteButton nodeId={node._uid} visible={isSelected} />
         </div>
       </div>
 
@@ -608,7 +608,7 @@ function NodeCard({
         const parentIsFlexStack =
           node.type === 'stack' && layoutStyle !== undefined;
         return (
-          <ContainerDropZone parentId={node.id} layoutStyle={layoutStyle}>
+          <ContainerDropZone parentId={node._uid} layoutStyle={layoutStyle}>
             {node.children.length === 0 ? (
               <Typography
                 variant="caption"
@@ -629,7 +629,7 @@ function NodeCard({
                     ? { gridColumn: `span ${childGridSpan(c, cols)}` }
                     : undefined;
                 return (
-                  <Fragment key={c.id}>
+                  <Fragment key={c._uid}>
                     {/*
                       Insert-before drop strip. Renders above each
                       sibling as a thin band; when an existing node is
@@ -645,8 +645,8 @@ function NodeCard({
                     */}
                     {!parentIsGrid && (
                       <ReorderStrip
-                        parentId={node.id}
-                        insertBeforeId={c.id}
+                        parentId={node._uid}
+                        insertBeforeId={c._uid}
                         index={idx}
                       />
                     )}

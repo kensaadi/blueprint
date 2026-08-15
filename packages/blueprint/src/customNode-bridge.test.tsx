@@ -58,7 +58,7 @@ describe('customNode + form bridge integration', () => {
     version: '1.0',
     root: {
       type: 'form',
-      id: 'bridged-form',
+      nodeId: 'bridged-form',
       children: [
         { type: 'field', props: { name: 'name', label: 'Name' } },
         { type: 'customWidget' },

@@ -19,6 +19,7 @@ import { validate } from '@dashforge/blueprint-core';
 import type { ValidationError } from '@dashforge/blueprint-core';
 import type { BlueprintNode, BlueprintDocument } from '@dashforge/blueprint-core';
 import { useBuilderState } from './BuilderStateContext';
+import { stripUid } from './exportContract';
 
 /**
  * Builder-only lint: an empty container renders as zero-height at
@@ -44,7 +45,7 @@ function collectEmptyContainerWarnings(
         code: 'BUILDER_EMPTY_CONTAINER',
         message: `Empty ${n.type} — will render as 0px at runtime unless content is injected via slots.`,
         atomType: n.type,
-        atomId: n.id,
+        atomId: n.nodeId,
       });
     }
     n.children?.forEach((c, i) => walk(c, `${p}/children/${i}`));
@@ -90,7 +91,12 @@ export function useValidation(): ValidationSummary {
     // The Builder's editing `BlueprintNode` (state/types) is a looser shape
     // than core's; cast at this boundary — the runtime validator still checks
     // the actual structure.
-    const result = validate(contract as unknown as BlueprintDocument, { mode: 'strict' });
+    // Strip the Builder-only `_uid` before validating — core's `.strict()`
+    // schema rejects it as an unknown key (it's never in the contract).
+    const result = validate(
+      stripUid(contract) as unknown as BlueprintDocument,
+      { mode: 'strict' },
+    );
     const emptyWarnings = collectEmptyContainerWarnings(
       contract.root as unknown as BlueprintNode,
       '/root',

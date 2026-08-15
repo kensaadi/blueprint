@@ -15,7 +15,7 @@ import type { Contract } from './types';
  * whitespace and filesystem-hostile characters.
  */
 export function filenameForContract(contract: Contract): string {
-  const id = contract.root?.id ?? 'untitled';
+  const id = contract.root?.nodeId ?? 'untitled';
   const safe = id.replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
   return (safe || 'untitled') + '.json';
 }
@@ -39,7 +39,26 @@ export function filenameForVersion(
 
 /** Pretty-printed JSON — the shape Blueprint runtime consumes. */
 export function serializeContract(contract: Contract): string {
-  return JSON.stringify(contract, null, 2);
+  return JSON.stringify(stripUid(contract), null, 2);
+}
+
+/**
+ * Strip the Builder-only `_uid` handle from every node so it never
+ * leaves the Builder. The public `nodeId` is kept — it's the exported
+ * addressing key. Runs on every export path (download + copy) and before
+ * validation (core's `.strict()` schema rejects the unknown `_uid` key).
+ */
+export function stripUid<T>(value: T): T {
+  if (Array.isArray(value)) return value.map(stripUid) as unknown as T;
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k === '_uid') continue;
+      out[k] = stripUid(v);
+    }
+    return out as T;
+  }
+  return value;
 }
 
 /**

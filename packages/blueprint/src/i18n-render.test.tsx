@@ -44,7 +44,7 @@ const contract: BlueprintDocument = {
   version: '1.0',
   root: {
     type: 'form',
-    id: 'i18n-form',
+    nodeId: 'i18n-form',
     children: [
       // shorthand at prop level
       { type: 'field', props: { name: 'firstName', label: { $t: 'common.firstName' } } },

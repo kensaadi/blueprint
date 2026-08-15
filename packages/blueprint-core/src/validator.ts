@@ -84,11 +84,11 @@ function walkAtoms(
   knownExternalTypes: ReadonlySet<string>,
   mode: 'strict' | 'lenient',
 ): void {
-  // Form / other atoms that need a top-level `id`
-  if (isAtomName(node.type) && ATOMS_REQUIRING_ID.has(node.type) && !node.id) {
+  // Form / other atoms that need a top-level `nodeId`
+  if (isAtomName(node.type) && ATOMS_REQUIRING_ID.has(node.type) && !node.nodeId) {
     errors.push({
-      path: `${prefix}/id`,
-      message: `${node.type} node requires an id (used to find its config in the \`forms\` prop)`,
+      path: `${prefix}/nodeId`,
+      message: `${node.type} node requires a nodeId (used to find its config in the \`forms\` prop)`,
       severity: 'error',
       code: 'MISSING_ID',
       atomType: node.type,
@@ -99,7 +99,7 @@ function walkAtoms(
     const schema = ATOM_PROP_SCHEMAS[node.type];
     const result = schema.safeParse(node.props ?? {});
     if (!result.success) {
-      errors.push(...fromZodError(result.error, `${prefix}/props`, node.type, node.id));
+      errors.push(...fromZodError(result.error, `${prefix}/props`, node.type, node.nodeId));
     }
   } else if (!knownExternalTypes.has(node.type)) {
     const diagnostic: ValidationError = {
@@ -108,7 +108,7 @@ function walkAtoms(
       severity: mode === 'strict' ? 'error' : 'warning',
       code: 'UNKNOWN_TYPE',
       atomType: node.type,
-      atomId: node.id,
+      atomId: node.nodeId,
       received: node.type,
     };
     (diagnostic.severity === 'error' ? errors : warnings).push(diagnostic);
@@ -121,14 +121,14 @@ function walkAtoms(
 
 /**
  * Collect `{ nodeId, fieldName, dependsOn[] }` triples by walking the
- * tree. Only nodes with a non-boolean `visibility` rule + an `id` are
- * tracked (cycles require an id to be referenced).
+ * tree. Only nodes with a non-boolean `visibility` rule + a `nodeId` are
+ * tracked (cycles require a nodeId to be referenced).
  *
  * For form-field atoms (`field`, `select`, `date`, ...) the "field name"
- * is `props.name`, NOT `node.id` — that's what `$form.X` resolves against.
+ * is `props.name`, NOT `node.nodeId` — that's what `$form.X` resolves against.
  */
 type VisibilityNode = {
-  /** id used in diagnostics — node.id if set, else props.name, else `<anonymous>`. */
+  /** label for diagnostics — node.nodeId if set, else props.name, else `<anonymous>`. */
   label: string;
   /** The form-field name this node represents (for `$form.X` resolution). */
   fieldName: string | undefined;
@@ -137,6 +137,35 @@ type VisibilityNode = {
   path: string;
 };
 
+/**
+ * Walk the tree and flag any `nodeId` used more than once. `seen` maps a
+ * nodeId to the path of its FIRST occurrence, so the error on a later
+ * duplicate can point back at the original.
+ */
+function collectDuplicateNodeIds(
+  node: BlueprintNode,
+  prefix: string,
+  seen: Map<string, string>,
+  errors: ValidationError[],
+): void {
+  if (node.nodeId) {
+    const first = seen.get(node.nodeId);
+    if (first) {
+      errors.push({
+        path: `${prefix}/nodeId`,
+        message: `Duplicate nodeId "${node.nodeId}" — already used at ${first}. nodeId must be unique across the contract.`,
+        severity: 'error',
+        code: 'DUPLICATE_NODE_ID',
+      });
+    } else {
+      seen.set(node.nodeId, `${prefix}/nodeId`);
+    }
+  }
+  node.children?.forEach((child, i) =>
+    collectDuplicateNodeIds(child, `${prefix}/children/${i}`, seen, errors),
+  );
+}
+
 function collectVisibilityGraph(
   node: BlueprintNode,
   prefix: string,
@@ -144,7 +173,7 @@ function collectVisibilityGraph(
 ): void {
   if (node.visibility && typeof node.visibility !== 'boolean') {
     const fieldName = typeof node.props?.name === 'string' ? node.props.name : undefined;
-    const label = node.id ?? fieldName ?? '<anonymous>';
+    const label = node.nodeId ?? fieldName ?? '<anonymous>';
     const deps = Array.from(collectFieldRefs(node.visibility as VisibilityRule));
     out.push({ label, fieldName, dependsOn: deps, path: `${prefix}/visibility` });
   }
@@ -233,6 +262,11 @@ export function validate(
 
   // Pass 2 — atom-specific
   walkAtoms(data.root, '/root', errors, warnings, knownExternalTypes, mode);
+
+  // Pass 2.5 — nodeId uniqueness (the public addressing key must be
+  // unambiguous: duplicate ids would make slot overrides / forms lookups
+  // hit the wrong node).
+  collectDuplicateNodeIds(data.root, '/root', new Map(), errors);
 
   // Pass 3 — cyclic visibility dependency detection
   const graph: VisibilityNode[] = [];

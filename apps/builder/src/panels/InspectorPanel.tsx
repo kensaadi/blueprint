@@ -39,7 +39,7 @@ export function InspectorPanel() {
   const node = findNodeById(contract.root, selectedId);
   const parent = findParentOf(contract.root, selectedId);
   const validation = useValidation();
-  const nodeIssues = node ? validation.byId.get(node.id) ?? [] : [];
+  const nodeIssues = node?.nodeId ? validation.byId.get(node.nodeId) ?? [] : [];
 
   return (
     <PanelShell
@@ -141,7 +141,7 @@ function SelectedNodeView({
             className="rounded px-1.5 py-0.5 font-mono text-[10px]"
             style={{ background: 'var(--bd-item)', color: 'var(--bd-text-faint)' }}
           >
-            {node.id}
+            {node.nodeId}
           </span>
           {isCustom && (
             <span
@@ -259,13 +259,13 @@ function FormBindingPanel({
             className="rounded px-1.5 py-0.5 font-mono text-[12px]"
             style={{ background: 'var(--bd-surface, var(--bd-item))', color: 'var(--bd-accent)' }}
           >
-            {node.id}
+            {node.nodeId}
           </code>
         </div>
         <p className="mt-2 leading-relaxed">
           The host resolves the FormConfig (zod schema, initial values,
           submit handler) via{' '}
-          <code>&lt;DashBlueprint forms=&#123;&#123; {node.id}: config &#125;&#125; /&gt;</code>.
+          <code>&lt;DashBlueprint forms=&#123;&#123; {node.nodeId}: config &#125;&#125; /&gt;</code>.
           Rename via NODE.ID above.
         </p>
       </div>
@@ -303,7 +303,7 @@ function CustomTypeEditor({
           onBlur={(e) => {
             const v = e.target.value.trim();
             if (v && v !== node.type) {
-              dispatch({ type: 'setNodeType', id: node.id, newType: v });
+              dispatch({ type: 'setNodeType', id: node._uid, newType: v });
             }
           }}
           className="w-full rounded-md border px-2.5 py-2 text-[13px] outline-none"

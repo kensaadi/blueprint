@@ -59,18 +59,18 @@ function NodeIdField({ node }: Props) {
   return (
     <label className="flex flex-col gap-1">
       <span className={labelClass} style={{ color: 'var(--bd-text-soft)' }}>
-        node.id
-        <FieldHint text={hintFor('node.id')} />
+        nodeId
+        <FieldHint text={hintFor('nodeId')} />
       </span>
       <input
         type="text"
         className={inputBase}
         style={inputStyle}
-        placeholder={placeholderFor('node.id')}
-        value={node.id}
+        placeholder={placeholderFor('nodeId')}
+        value={node.nodeId ?? ''}
         onChange={(e) => {
           const v = e.target.value.trim();
-          if (v) dispatch({ type: 'setNodeId', id: node.id, newId: v });
+          if (v) dispatch({ type: 'setNodeId', id: node._uid, newId: v });
         }}
       />
       <span
@@ -116,7 +116,7 @@ function VisibilityField({ node }: Props) {
         : { field: '$form.example', eq: 'value' };
         break;
     }
-    dispatch({ type: 'setNodeAxis', id: node.id, axis: 'visibility', value });
+    dispatch({ type: 'setNodeAxis', id: node._uid, axis: 'visibility', value });
     setForceJson(false);
   };
 
@@ -139,7 +139,7 @@ function VisibilityField({ node }: Props) {
             rule={node.visibility}
             root={contract.root}
             onChange={(v) =>
-              dispatch({ type: 'setNodeAxis', id: node.id, axis: 'visibility', value: v })
+              dispatch({ type: 'setNodeAxis', id: node._uid, axis: 'visibility', value: v })
             }
             onFallbackToJson={() => setForceJson(true)}
           />
@@ -160,7 +160,7 @@ function VisibilityField({ node }: Props) {
             placeholder={JSON_EXAMPLES.visibilityRule}
             value={node.visibility}
             onChange={(v) =>
-              dispatch({ type: 'setNodeAxis', id: node.id, axis: 'visibility', value: v })
+              dispatch({ type: 'setNodeAxis', id: node._uid, axis: 'visibility', value: v })
             }
           />
           <button
@@ -204,7 +204,7 @@ function DisabledField({ node }: Props) {
         onChange={(next) =>
           dispatch({
             type: 'setNodeAxis',
-            id: node.id,
+            id: node._uid,
             axis: 'disabled',
             value: next ? undefined : true,
           })
@@ -233,7 +233,7 @@ function AccessField({ node }: Props) {
   const patch = (delta: Partial<NonNullable<BlueprintNode['access']>>) => {
     dispatch({
       type: 'setNodeAxis',
-      id: node.id,
+      id: node._uid,
       axis: 'access',
       value: { ...cur, ...delta },
     });
@@ -250,7 +250,7 @@ function AccessField({ node }: Props) {
         onChange={(next) =>
           dispatch({
             type: 'setNodeAxis',
-            id: node.id,
+            id: node._uid,
             axis: 'access',
             value: next ? { resource: '', action: 'read' } : undefined,
           })
@@ -344,7 +344,7 @@ function SlotsField({ node }: Props) {
     isSimpleShape(node.slots) ? 'visual' : 'json',
   );
   const setSlots = (v: unknown) =>
-    dispatch({ type: 'setNodeAxis', id: node.id, axis: 'slots', value: v });
+    dispatch({ type: 'setNodeAxis', id: node._uid, axis: 'slots', value: v });
 
   // If the current value shape is incompatible with the visual editor,
   // pin the mode to `json` and disable the toggle — safer than showing

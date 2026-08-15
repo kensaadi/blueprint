@@ -37,7 +37,7 @@ export function LayoutEditor({ node }: { node: BlueprintNode }) {
   const setSize = (next: Size | undefined) => {
     dispatch({
       type: 'setLayoutHint',
-      id: node.id,
+      id: node._uid,
       value: next === undefined ? undefined : { size: next },
     });
   };

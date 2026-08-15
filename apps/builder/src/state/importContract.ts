@@ -18,19 +18,20 @@
 import { validate } from '@dashforge/blueprint-core';
 import type { ValidationError } from '@dashforge/blueprint-core';
 import type { BlueprintNode, Contract } from './types';
-import { nodeId } from './factory';
+import { uid } from './factory';
 
 export type ImportResult =
   | { ok: true; contract: Contract }
   | { ok: false; error: string; issues?: ValidationError[] };
 
 /**
- * Walk the tree and make sure every node has an envelope-level `id`.
- * Blueprint's validator only requires ids on `ATOMS_REQUIRING_ID`
- * (form), but the Builder needs one everywhere for selection.
+ * Walk the tree and mint the Builder-internal `_uid` on every node (an
+ * imported contract has its `_uid` stripped — only the public `nodeId`
+ * survives export, and that we preserve as-is). Every node needs a `_uid`
+ * for selection / drop targets inside the Builder.
  */
 function ensureIds(node: BlueprintNode): BlueprintNode {
-  const withId: BlueprintNode = { ...node, id: node.id || nodeId() };
+  const withId: BlueprintNode = { ...node, _uid: node._uid || uid() };
   if (Array.isArray(withId.children)) {
     withId.children = withId.children.map(ensureIds);
   } else {
