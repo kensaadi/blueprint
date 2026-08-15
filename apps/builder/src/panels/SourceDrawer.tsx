@@ -9,19 +9,26 @@
  * DOGFOOD note (G-12 / G-14): still no `<Drawer position="bottom">`
  * in @dashforge/tw. When it lands, this component swaps for it.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Typography, Button } from '@dashforge/tw';
 import { PanelShell } from '../primitives/PanelShell';
 import { useBuilderState } from '../state/BuilderStateContext';
+import { copyContract } from '../state/exportContract';
+
+type CopyState = 'idle' | 'ok' | 'fail';
 
 export function SourceDrawer() {
   const { contract } = useBuilderState();
   // JSON.stringify is deterministic here — no cycles, no functions.
   // Regenerating on every action is fine at palette-scale contracts.
   const lines = useMemo(() => tokenizeJson(contract), [contract]);
+  const [copyState, setCopyState] = useState<CopyState>('idle');
 
   const onCopy = () => {
-    void navigator.clipboard?.writeText(JSON.stringify(contract, null, 2));
+    void copyContract(contract).then((ok) => {
+      setCopyState(ok ? 'ok' : 'fail');
+      window.setTimeout(() => setCopyState('idle'), 1600);
+    });
   };
 
   return (
@@ -31,7 +38,7 @@ export function SourceDrawer() {
       padding="0"
     >
       <div className="flex h-full flex-col">
-        <SourceDrawerHeader onCopy={onCopy} />
+        <SourceDrawerHeader onCopy={onCopy} copyState={copyState} />
         <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
           <pre className="font-mono text-[13px] leading-[1.6]" style={{ color: 'var(--bd-text)' }}>
             {lines.map((line, i) => (
@@ -55,7 +62,15 @@ export function SourceDrawer() {
   );
 }
 
-function SourceDrawerHeader({ onCopy }: { onCopy: () => void }) {
+function SourceDrawerHeader({
+  onCopy,
+  copyState,
+}: {
+  onCopy: () => void;
+  copyState: CopyState;
+}) {
+  const copyLabel =
+    copyState === 'ok' ? 'Copied!' : copyState === 'fail' ? 'Copy failed' : 'Copy';
   return (
     <div
       className="flex shrink-0 items-center justify-between border-b px-4 py-2"
@@ -86,7 +101,7 @@ function SourceDrawerHeader({ onCopy }: { onCopy: () => void }) {
           Format
         </Button>
         <Button variant="ghost" color="secondary" size="sm" onClick={onCopy}>
-          Copy
+          {copyLabel}
         </Button>
       </div>
     </div>

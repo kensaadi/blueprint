@@ -61,13 +61,61 @@ export function downloadContract(contract: Contract, filename?: string): void {
 
 /**
  * Copy the pretty-printed JSON to the clipboard. Returns whether the
- * write succeeded — the caller can surface a toast either way.
+ * write ACTUALLY succeeded, so the caller can surface feedback.
+ *
+ * Uses the async Clipboard API when available (secure context: https or
+ * localhost) and falls back to a hidden-textarea + `execCommand` path for
+ * non-secure contexts — e.g. the dev server reached over a LAN IP — where
+ * `navigator.clipboard` is `undefined`. The previous implementation
+ * `await navigator.clipboard?.writeText(...)` silently resolved to
+ * `undefined` in that case and reported a false success while copying
+ * nothing.
  */
 export async function copyContract(contract: Contract): Promise<boolean> {
-  try {
-    await navigator.clipboard?.writeText(serializeContract(contract));
-    return true;
-  } catch {
-    return false;
+  return copyText(serializeContract(contract));
+}
+
+async function copyText(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Permission denied / transient focus loss — fall through to legacy.
+    }
   }
+  return legacyCopy(text);
+}
+
+/**
+ * Legacy clipboard write for non-secure contexts where the async
+ * Clipboard API is unavailable. Selects a throwaway off-screen textarea,
+ * runs `document.execCommand('copy')`, then restores any prior selection
+ * it clobbered.
+ */
+function legacyCopy(text: string): boolean {
+  if (typeof document === 'undefined') return false;
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.top = '-9999px';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  const selection = document.getSelection();
+  const prevRange =
+    selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+  ta.select();
+  let ok = false;
+  try {
+    ok = document.execCommand('copy');
+  } catch {
+    ok = false;
+  }
+  document.body.removeChild(ta);
+  if (prevRange && selection) {
+    selection.removeAllRanges();
+    selection.addRange(prevRange);
+  }
+  return ok;
 }
