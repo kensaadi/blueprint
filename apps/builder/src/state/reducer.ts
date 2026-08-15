@@ -11,7 +11,29 @@
  * complicate serialization (the exported JSON is naturally recursive).
  */
 import type { BlueprintNode, BuilderState } from './types';
-import { createNode } from './factory';
+import { createNode, uid } from './factory';
+
+/** Atoms whose `props.items` are paired 1:1 with structural child panels. */
+const PANELED_TYPES = new Set(['tabs', 'accordion']);
+
+/** A default item + its matching empty panel for a tabs/accordion atom. */
+function panelDefaults(type: string, count: number): {
+  item: Record<string, unknown>;
+  panel: BlueprintNode;
+} {
+  const tag = uid().slice(2, 6);
+  const item =
+    type === 'accordion'
+      ? { value: `section-${tag}`, header: `Section ${count + 1}` }
+      : { value: `tab-${tag}`, label: `Tab ${count + 1}` };
+  return { item, panel: createNode('stack') };
+}
+
+function itemsOf(node: BlueprintNode): Record<string, unknown>[] {
+  return Array.isArray(node.props.items)
+    ? (node.props.items as Record<string, unknown>[])
+    : [];
+}
 
 export type BuilderAction =
   // `parentId: null` means "set as root". Only allowed while the tree
@@ -62,6 +84,12 @@ export type BuilderAction =
        */
       insertBeforeId?: string;
     }
+  // Paneled atoms (tabs / accordion): keep `props.items` in lockstep with
+  // the structural child panels (children[i] is the panel for items[i]).
+  // One user action = one history step touching BOTH.
+  | { type: 'addPanelItem'; id: string }
+  | { type: 'removePanelItem'; id: string; index: number }
+  | { type: 'movePanelItem'; id: string; index: number; dir: -1 | 1 }
   | { type: 'replaceContract'; contract: BuilderState['contract'] }
   // Point the buffer at a saved file — used after Open, Save-As, or
   // rename. `fileRef: null` means "back to untitled".
@@ -268,6 +296,68 @@ export function builderReducer(
         contract: { ...state.contract, root: nextRoot },
         selectedId: action.id,
       };
+    }
+
+    case 'addPanelItem': {
+      if (state.contract.root === null) return state;
+      let newPanelUid: string | null = null;
+      const nextRoot = mapTree(state.contract.root, (n) => {
+        if (n._uid !== action.id || !PANELED_TYPES.has(n.type)) return n;
+        const items = itemsOf(n);
+        const { item, panel } = panelDefaults(n.type, items.length);
+        newPanelUid = panel._uid;
+        return {
+          ...n,
+          props: { ...n.props, items: [...items, item] },
+          children: [...n.children, panel],
+        };
+      });
+      return {
+        ...state,
+        contract: { ...state.contract, root: nextRoot },
+        // Select the fresh panel so the user can drop content into it.
+        selectedId: newPanelUid ?? state.selectedId,
+      };
+    }
+
+    case 'removePanelItem': {
+      if (state.contract.root === null) return state;
+      const nextRoot = mapTree(state.contract.root, (n) => {
+        if (n._uid !== action.id || !PANELED_TYPES.has(n.type)) return n;
+        const items = itemsOf(n);
+        if (action.index < 0 || action.index >= items.length) return n;
+        return {
+          ...n,
+          props: { ...n.props, items: items.filter((_, i) => i !== action.index) },
+          children: n.children.filter((_, i) => i !== action.index),
+        };
+      });
+      return { ...state, contract: { ...state.contract, root: nextRoot } };
+    }
+
+    case 'movePanelItem': {
+      if (state.contract.root === null) return state;
+      const nextRoot = mapTree(state.contract.root, (n) => {
+        if (n._uid !== action.id || !PANELED_TYPES.has(n.type)) return n;
+        const items = itemsOf(n);
+        const j = action.index + action.dir;
+        if (action.index < 0 || action.index >= items.length || j < 0 || j >= items.length) {
+          return n;
+        }
+        const nextItems = items.slice();
+        [nextItems[action.index], nextItems[j]] = [nextItems[j], nextItems[action.index]];
+        const nextChildren = n.children.slice();
+        // Children may lag items (e.g. an item without a panel yet) — only
+        // swap when both indices exist.
+        if (nextChildren[action.index] && nextChildren[j]) {
+          [nextChildren[action.index], nextChildren[j]] = [
+            nextChildren[j],
+            nextChildren[action.index],
+          ];
+        }
+        return { ...n, props: { ...n.props, items: nextItems }, children: nextChildren };
+      });
+      return { ...state, contract: { ...state.contract, root: nextRoot } };
     }
 
     case 'replaceContract':

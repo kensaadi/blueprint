@@ -154,13 +154,22 @@ function defaultPropsFor(type: AtomType): Record<string, unknown> {
  * container atoms — the user drops into them explicitly.
  */
 export function createNode(type: AtomType): BlueprintNode {
+  const props = defaultPropsFor(type);
+  // tabs / accordion pair each item with a structural child panel
+  // (children[i] is the panel for items[i]). Seed one empty panel per
+  // default item so the two start aligned — the reducer keeps them in
+  // lockstep on add/remove/reorder thereafter.
+  const children: BlueprintNode[] =
+    (type === 'tabs' || type === 'accordion') && Array.isArray(props.items)
+      ? (props.items as unknown[]).map(() => createNode('stack'))
+      : [];
   return {
     // Immutable internal handle (Builder-only, stripped on export) + a
     // friendly public nodeId every node carries by default.
     _uid: uid(),
     nodeId: semanticId(type),
     type,
-    props: defaultPropsFor(type),
-    children: [],
+    props,
+    children,
   };
 }

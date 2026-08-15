@@ -40,6 +40,7 @@ export function SchemaDrivenInspector({ node }: { node: BlueprintNode }) {
           key={field.key}
           field={field}
           atomType={node.type}
+          nodeUid={node._uid}
           value={node.props[field.key]}
           onChange={(next) => {
             // `undefined` means "unset" — we still store it explicitly

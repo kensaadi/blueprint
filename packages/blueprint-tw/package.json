@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint-tw",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Blueprint Tailwind flavor pack — atom bindings that render the contract with @dashforge/tw components.",
   "license": "AGPL-3.0-only",
   "type": "module",

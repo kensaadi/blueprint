@@ -27,6 +27,9 @@ type PropEditorProps = {
   onChange: (next: unknown) => void;
   /** Optional atom type so we can resolve `atom.propName` overrides. */
   atomType?: string;
+  /** The selected node's internal handle — lets the items editor sync
+   * child panels for tabs/accordion. */
+  nodeUid?: string;
 };
 
 /** Shared input styling — matches Theme A tokens. */
@@ -38,7 +41,7 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--bd-text)',
 };
 
-export function PropEditor({ field, value, onChange, atomType }: PropEditorProps) {
+export function PropEditor({ field, value, onChange, atomType, nodeUid }: PropEditorProps) {
   const hint = hintFor(field.key, atomType);
   const placeholder = placeholderFor(field.key, atomType);
   const looksLikePlaceholder =
@@ -60,7 +63,7 @@ export function PropEditor({ field, value, onChange, atomType }: PropEditorProps
           </span>
         )}
       </span>
-      {renderInput(field, value, onChange, placeholder)}
+      {renderInput(field, value, onChange, placeholder, atomType, nodeUid)}
       {looksLikePlaceholder && (
         <span
           className="text-[11px] leading-snug"
@@ -109,6 +112,8 @@ function renderInput(
   value: unknown,
   onChange: (next: unknown) => void,
   placeholder?: string,
+  atomType?: string,
+  nodeUid?: string,
 ) {
   // TranslatableString props (label, placeholder, helperText, …) are
   // zod UNIONS in the atom schemas, so the adapter reports them as
@@ -238,7 +243,15 @@ function renderInput(
       );
 
     case 'array':
-      return <ItemsEditor field={field} value={value} onChange={onChange} />;
+      return (
+        <ItemsEditor
+          field={field}
+          value={value}
+          onChange={onChange}
+          atomType={atomType}
+          nodeUid={nodeUid}
+        />
+      );
 
     case 'json':
     default: {

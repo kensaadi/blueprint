@@ -602,6 +602,12 @@ function NodeCard({
                   (rawCols as { base?: number }).base ?? 1)
               : 1;
         const parentIsGrid = node.type === 'grid';
+        // tabs / accordion: each child is the panel for items[idx] — label
+        // it so the designer sees which tab/section they're editing.
+        const parentIsPaneled = node.type === 'tabs' || node.type === 'accordion';
+        const panelItems = Array.isArray(node.props.items)
+          ? (node.props.items as unknown[])
+          : [];
         // Any stack that ends up with a flex layout (row, wrapped,
         // aligned, justified) uses its `gap` instead of the per-child
         // marginTop — otherwise cards would inherit both.
@@ -649,6 +655,20 @@ function NodeCard({
                         insertBeforeId={c._uid}
                         index={idx}
                       />
+                    )}
+                    {parentIsPaneled && (
+                      <div
+                        className="flex items-center gap-1.5 px-1 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide"
+                        style={{ color: 'var(--bd-text-faint)' }}
+                      >
+                        <i className="ti ti-layout-navbar-collapse text-[12px]" aria-hidden />
+                        {node.type === 'accordion' ? 'Section' : 'Tab'} {idx + 1}
+                        {panelLabel(panelItems[idx]) && (
+                          <span style={{ color: 'var(--bd-text-soft)' }}>
+                            · {panelLabel(panelItems[idx])}
+                          </span>
+                        )}
+                      </div>
                     )}
                     <NodeCard
                       node={c}
@@ -721,4 +741,20 @@ function ReorderStrip({
       />
     </div>
   );
+}
+
+/**
+ * Read the display label of a tabs/accordion item for the per-panel
+ * header — `label` (tabs) or `header` (accordion), resolving the `$t`
+ * translation-ref shorthand to its key.
+ */
+function panelLabel(item: unknown): string {
+  if (!item || typeof item !== 'object') return '';
+  const o = item as Record<string, unknown>;
+  const v = o.label ?? o.header;
+  if (typeof v === 'string') return v;
+  if (v && typeof v === 'object' && typeof (v as { $t?: unknown }).$t === 'string') {
+    return (v as { $t: string }).$t;
+  }
+  return '';
 }

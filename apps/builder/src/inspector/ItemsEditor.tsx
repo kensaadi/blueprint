@@ -13,6 +13,14 @@ import type { CSSProperties, ReactNode } from 'react';
 import { isBoundList } from '@dashforge/blueprint-core';
 import type { PropField } from './schemaAdapter';
 import { PropEditor } from './PropEditor';
+import { useBuilderDispatch } from '../state/BuilderStateContext';
+
+/** Add/remove/reorder handlers that also sync the structural child panels. */
+type PanelOps = {
+  add: () => void;
+  remove: (index: number) => void;
+  move: (index: number, dir: -1 | 1) => void;
+};
 
 const inputBase =
   'w-full rounded-md border px-2.5 py-2 text-[13px] outline-none';
@@ -44,14 +52,40 @@ export function ItemsEditor({
   field,
   value,
   onChange,
+  atomType,
+  nodeUid,
 }: {
   field: PropField;
   value: unknown;
   onChange: (next: unknown) => void;
+  atomType?: string;
+  nodeUid?: string;
 }) {
+  const dispatch = useBuilderDispatch();
   const itemFields = field.itemFields ?? [];
   const bound = isBoundList(value);
   const asArray = Array.isArray(value) ? (value as ItemObj[]) : [];
+  // tabs / accordion items are paired 1:1 with structural child panels —
+  // add/remove/reorder must go through the reducer so the panels follow.
+  // Field edits (label/value) still flow through `onChange` (positional,
+  // children untouched).
+  const paneled =
+    (atomType === 'tabs' || atomType === 'accordion') && !!nodeUid;
+
+  if (paneled) {
+    return (
+      <ArrayRows
+        items={asArray}
+        itemFields={itemFields}
+        onChange={onChange}
+        panelOps={{
+          add: () => dispatch({ type: 'addPanelItem', id: nodeUid }),
+          remove: (i) => dispatch({ type: 'removePanelItem', id: nodeUid, index: i }),
+          move: (i, dir) => dispatch({ type: 'movePanelItem', id: nodeUid, index: i, dir }),
+        }}
+      />
+    );
+  }
 
   if (!field.bindable) {
     return <ArrayRows items={asArray} itemFields={itemFields} onChange={onChange} />;
@@ -168,11 +202,16 @@ function ArrayRows({
   items,
   itemFields,
   onChange,
+  panelOps,
 }: {
   items: ItemObj[];
   itemFields: PropField[];
   onChange: (next: ItemObj[]) => void;
+  /** When set (tabs/accordion), add/remove/reorder sync the child panels. */
+  panelOps?: PanelOps;
 }) {
+  // Field edits always flow through onChange — positional, so paired child
+  // panels stay aligned without touching them.
   const update = (i: number, key: string, v: unknown) => {
     const next = items.map((it, idx) => {
       if (idx !== i) return it;
@@ -182,15 +221,22 @@ function ArrayRows({
     });
     onChange(next);
   };
-  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  const remove = (i: number) => {
+    if (panelOps) return panelOps.remove(i);
+    onChange(items.filter((_, idx) => idx !== i));
+  };
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
     if (j < 0 || j >= items.length) return;
+    if (panelOps) return panelOps.move(i, dir);
     const next = items.slice();
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
   };
-  const add = () => onChange([...items, blankItem(itemFields)]);
+  const add = () => {
+    if (panelOps) return panelOps.add();
+    onChange([...items, blankItem(itemFields)]);
+  };
 
   return (
     <div className="flex flex-col gap-2">
