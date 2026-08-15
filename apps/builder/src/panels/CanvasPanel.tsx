@@ -475,6 +475,7 @@ function NodeCard({
     uid: node._uid,
     atomType: node.type,
     parentId: parentId ?? null,
+    label: node.nodeId,
   };
   const {
     attributes,
@@ -503,25 +504,31 @@ function NodeCard({
       }}
       className={`rounded-lg border transition-colors${flash ? ' bd-flash' : ''}`}
       style={{
-        // Selection wins over hover: accent ring for real selection,
-        // dashed accent border for the palette's transient preview.
-        borderColor: isSelected || isHovered ? 'var(--bd-accent)' : 'var(--bd-border)',
-        borderStyle: isHovered ? 'dashed' : 'solid',
-        background: 'var(--bd-surface, var(--bd-item))',
-        boxShadow: isSelected ? '0 0 0 1px var(--bd-accent)' : undefined,
+        // While dragging, the source slot reads as an empty "hole" (dashed
+        // accent outline + tinted, dimmed) — the lifted card is the overlay.
+        // Otherwise selection wins over hover for the accent ring.
+        borderColor:
+          isDragging || isSelected || isHovered ? 'var(--bd-accent)' : 'var(--bd-border)',
+        borderStyle: isDragging || isHovered ? 'dashed' : 'solid',
+        background: isDragging
+          ? 'var(--bd-accent-bg)'
+          : 'var(--bd-surface, var(--bd-item))',
+        boxShadow: isSelected && !isDragging ? '0 0 0 1px var(--bd-accent)' : undefined,
         // Only insert the historical row-gap when the parent is a
         // vertical stack of cards. Grid / flex-row parents provide
         // their own gap via the drop zone layout style.
         marginTop: skipStackMargin || depth === 0 ? 0 : 8,
         cursor: isRoot ? 'pointer' : 'grab',
-        opacity: isDragging ? 0.4 : 1,
-        // Sortable transform/transition open the gap + animate siblings as
-        // a card is dragged (the DragOverlay ghost follows the pointer).
-        // Reorder transforms are translate-only — build the string inline
-        // to avoid a direct dep on @dnd-kit/utilities.
-        transform: transform
-          ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
-          : undefined,
+        opacity: isDragging ? 0.5 : 1,
+        // Sortable transform/transition animate the SIBLINGS as a card is
+        // dragged. The active card itself gets NO transform — it stays put
+        // as a dashed, dimmed placeholder "hole" while the DragOverlay ghost
+        // follows the pointer (otherwise it would double-move). Translate-
+        // only, built inline to avoid a dep on @dnd-kit/utilities.
+        transform:
+          isDragging || !transform
+            ? undefined
+            : `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`,
         transition,
         // Parent grid injects `gridColumn: span N` here so the card
         // occupies the right cell width without an extra wrapper div.

@@ -32,16 +32,18 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { useBuilderDispatch } from '../state/BuilderStateContext';
-import { PaletteDragPreview } from './PaletteDragPreview';
+import { PaletteDragPreview, NodeDragPreview } from './PaletteDragPreview';
 
 export type PaletteDragData = { kind: 'palette'; atomType: string };
 // Drag of an existing node. `uid` is its internal handle (BlueprintNode
-// ._uid); `parentId` is the container it currently lives in.
+// ._uid); `parentId` is the container it currently lives in; `label` is
+// its public nodeId, shown on the drag overlay.
 export type ExistingNodeDragData = {
   kind: 'existing';
   uid: string;
   atomType: string;
   parentId: string | null;
+  label?: string;
 };
 // Empty-container / root drop zone. `parentId: null` targets the root
 // (creates the root atom on first drop).
@@ -124,7 +126,9 @@ export function DndProvider({ children }: { children: ReactNode }) {
   const dispatch = useBuilderDispatch();
   // Preview payload for the DragOverlay — set for BOTH palette and
   // existing-node drags so a ghost follows the pointer either way.
-  const [dragging, setDragging] = useState<{ atomType: string } | null>(null);
+  const [dragging, setDragging] = useState<
+    { kind: 'palette' | 'existing'; atomType: string; label?: string } | null
+  >(null);
 
   const sensors = useSensors(
     // A small activation distance keeps a plain click on a palette item /
@@ -136,8 +140,9 @@ export function DndProvider({ children }: { children: ReactNode }) {
 
   const onDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current;
-    if (isPaletteDrag(data)) setDragging({ atomType: data.atomType });
-    else if (isExistingDrag(data)) setDragging({ atomType: data.atomType });
+    if (isPaletteDrag(data)) setDragging({ kind: 'palette', atomType: data.atomType });
+    else if (isExistingDrag(data))
+      setDragging({ kind: 'existing', atomType: data.atomType, label: data.label });
   };
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -198,8 +203,17 @@ export function DndProvider({ children }: { children: ReactNode }) {
       accessibility={{ announcements, screenReaderInstructions }}
     >
       {children}
-      <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
-        {dragging ? <PaletteDragPreview atomType={dragging.atomType} /> : null}
+      <DragOverlay
+        dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' }}
+        modifiers={[snapCenterToCursor]}
+      >
+        {dragging ? (
+          dragging.kind === 'existing' ? (
+            <NodeDragPreview atomType={dragging.atomType} label={dragging.label} />
+          ) : (
+            <PaletteDragPreview atomType={dragging.atomType} />
+          )
+        ) : null}
       </DragOverlay>
     </DndContext>
   );
