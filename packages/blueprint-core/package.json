@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint-core",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Blueprint contract core — zod schemas, validator, and types. No React, no design system.",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -13,7 +13,9 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
@@ -29,7 +31,9 @@
     "react": ">=19"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true }
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/react": "^19.2.14",

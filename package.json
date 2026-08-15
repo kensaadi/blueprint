@@ -14,7 +14,8 @@
     "test": "turbo run test --concurrency=1",
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
-    "dev": "turbo dev"
+    "dev": "turbo dev",
+    "bump": "node scripts/bump-version.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
