@@ -17,6 +17,7 @@ import { Component, type ReactNode } from 'react';
 import { DashBlueprint } from '@dashforge/blueprint';
 import type { BlueprintNode } from '@dashforge/blueprint-core';
 import type { Contract } from '../state/types';
+import { stripUid } from '../state/exportContract';
 import { tablerIconRegistry } from '../data/tablerIconRegistry';
 
 class PreviewBoundary extends Component<
@@ -60,7 +61,9 @@ export default function TemplatePreview({
         <DashBlueprint
           version="1.0"
           lib="tw"
-          root={contract.root as unknown as BlueprintNode}
+          // Strip the Builder-only `_uid` handle — core's `.strict()` schema
+          // rejects it as an unrecognized key (same pass as export/validation).
+          root={stripUid(contract.root) as unknown as BlueprintNode}
           icons={tablerIconRegistry}
           validationMode="lenient"
         />
