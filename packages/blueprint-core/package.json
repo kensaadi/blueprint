@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint-core",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Blueprint contract core — zod schemas, validator, and types. No React, no design system.",
   "license": "AGPL-3.0-only",
   "type": "module",

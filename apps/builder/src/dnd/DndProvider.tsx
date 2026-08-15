@@ -91,9 +91,23 @@ export function DndProvider({ children }: { children: ReactNode }) {
     const src = e.active.data.current;
     const dst = e.over?.data.current;
 
-    // Palette drop → add a new node under the target container.
-    if (isPaletteDrag(src) && isContainerDrop(dst)) {
-      dispatch({ type: 'addNode', parentId: dst.parentId, nodeType: src.atomType });
+    // Palette drop → add a new node.
+    if (isPaletteDrag(src)) {
+      // Onto a reorder strip → insert at that exact position (previously
+      // the drop was silently lost, forcing add-then-reorder).
+      if (isReorderDrop(dst)) {
+        dispatch({
+          type: 'addNode',
+          parentId: dst.parentId,
+          nodeType: src.atomType,
+          insertBeforeId: dst.insertBeforeId,
+        });
+        return;
+      }
+      // Onto a container's inner area → append.
+      if (isContainerDrop(dst)) {
+        dispatch({ type: 'addNode', parentId: dst.parentId, nodeType: src.atomType });
+      }
       return;
     }
 

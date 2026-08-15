@@ -43,7 +43,10 @@ export type BuilderAction =
   // Transient outline for the palette's hover-preview. Never pushed
   // to history — see `isSelectionOnly` in history.ts.
   | { type: 'hover'; id: string | null }
-  | { type: 'addNode'; parentId: string | null; nodeType: string }
+  // `insertBeforeId` (optional) drops the new node immediately BEFORE that
+  // sibling under `parentId`; absent/unresolved → append. Lets a palette
+  // drop land at an exact position instead of always at the end.
+  | { type: 'addNode'; parentId: string | null; nodeType: string; insertBeforeId?: string }
   | { type: 'updateProps'; id: string; patch: Record<string, unknown> }
   // Rename the envelope-level `node.id`. Used by the Inspector when
   // the user names their form/tabs/section for `<DashBlueprint forms>`
@@ -158,13 +161,23 @@ export function builderReducer(
           selectedId: newNode._uid,
         };
       }
-      // Child-drop path: walk the tree to the parent and append.
+      // Child-drop path: walk the tree to the parent and insert. When
+      // `insertBeforeId` resolves to a sibling, splice before it; else
+      // append (previous behavior).
       if (state.contract.root === null) return state;
-      const nextRoot = mapTree(state.contract.root, (n) =>
-        n._uid === action.parentId
-          ? { ...n, children: [...n.children, newNode] }
-          : n,
-      );
+      const nextRoot = mapTree(state.contract.root, (n) => {
+        if (n._uid !== action.parentId) return n;
+        const before = action.insertBeforeId;
+        if (before) {
+          const idx = n.children.findIndex((c) => c._uid === before);
+          if (idx >= 0) {
+            const nextChildren = n.children.slice();
+            nextChildren.splice(idx, 0, newNode);
+            return { ...n, children: nextChildren };
+          }
+        }
+        return { ...n, children: [...n.children, newNode] };
+      });
       return {
         ...state,
         contract: { ...state.contract, root: nextRoot },

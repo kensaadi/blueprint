@@ -624,7 +624,8 @@ function NodeCard({
                 Drop atoms here
               </Typography>
             ) : (
-              node.children.map((c, idx) => {
+              <>
+              {node.children.map((c, idx) => {
                 // Only pin a `grid-column: span N` when the child
                 // opts in with a layoutHint. Without hints, the grid
                 // is in equal-fill mode and CSS auto-placement gives
@@ -680,7 +681,17 @@ function NodeCard({
                     />
                   </Fragment>
                 );
-              })
+              })}
+              {/* Trailing strip — insert / append precisely at the end.
+                  `__end__` never matches a sibling, so the reducer appends. */}
+              {!parentIsGrid && (
+                <ReorderStrip
+                  parentId={node._uid}
+                  insertBeforeId="__end__"
+                  index={node.children.length}
+                />
+              )}
+              </>
             )}
           </ContainerDropZone>
         );
