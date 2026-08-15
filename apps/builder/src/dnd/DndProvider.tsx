@@ -1,165 +1,212 @@
 /**
  * DndProvider — wraps dnd-kit's DndContext for the Builder canvas.
  *
- * Responsibilities:
- *   - Own the "currently dragging" state so <DragOverlay> can render a
- *     floating preview that follows the pointer across scroll containers
- *   - Translate a valid drop into a `dispatch({ type: 'addNode', … })`
- *     against the BuilderState reducer
+ * Model:
+ *   - Palette items are plain draggables (`{ kind: 'palette', atomType }`).
+ *   - Canvas nodes are SORTABLE (see CanvasPanel `useSortable`) — each
+ *     container is a SortableContext keyed by its `_uid`. Reorder,
+ *     cross-container move, keyboard DnD, and drop animations all come
+ *     from @dnd-kit/sortable.
+ *   - Empty containers / the root expose a droppable zone
+ *     (`{ kind: 'container', parentId }`) so a drop with no sibling to
+ *     anchor against still lands (append).
  *
- * Payload contracts — kept in TS so a stray drop can't crash the tree:
- *   - Palette draggable   → data: `{ kind: 'palette', atomType: string }`
- *   - Canvas droppable    → data: `{ kind: 'container', parentId: string }`
- *
- * A11y: default sensors (Pointer + Keyboard) are wired but keyboard
- * activation still needs a dedicated palette-focus + inspector-ARIA
- * pass, deferred to Phase 3g polish.
+ * `onDragEnd` resolves the target container + insert index from the
+ * `over` droppable — a sortable item carries its `sortable` context
+ * (containerId / index / items), a zone carries its `parentId`.
  */
 import { useState, type ReactNode } from 'react';
-import { DndContext, DragOverlay, useSensors, useSensor, PointerSensor, KeyboardSensor, pointerWithin, type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
+import {
+  DndContext,
+  DragOverlay,
+  useSensors,
+  useSensor,
+  PointerSensor,
+  KeyboardSensor,
+  closestCenter,
+  type Active,
+  type Over,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { useBuilderDispatch } from '../state/BuilderStateContext';
 import { PaletteDragPreview } from './PaletteDragPreview';
 
 export type PaletteDragData = { kind: 'palette'; atomType: string };
-// Drag of an existing node in the canvas tree — used for reorder /
-// re-parenting. The reducer refuses cyclic drops (parent into own
-// descendant); this data shape doesn't need to encode that guard.
-// `uid` is the dragged node's internal handle (BlueprintNode._uid), used
-// to address it in `moveNode`. Not the public `nodeId`.
-export type ExistingNodeDragData = { kind: 'existing'; uid: string; atomType: string };
-// `parentId: null` targets the empty root drop zone (creates the root
-// atom on first drop). Non-null targets a container's inner area.
-export type ContainerDropData = { kind: 'container'; parentId: string | null };
-/**
- * "Insert before" drop strip rendered above each existing sibling.
- * Lets the user place a dragged node at an exact position in a list
- * (Grid → Grid, Card → Card, …) without having to aim at the parent
- * container's inner dashed area — the source of the "can't move Grid
- * over another Grid" complaint before this landed.
- */
-export type ReorderDropData = {
-  kind: 'reorder';
-  parentId: string;
-  insertBeforeId: string;
+// Drag of an existing node. `uid` is its internal handle (BlueprintNode
+// ._uid); `parentId` is the container it currently lives in.
+export type ExistingNodeDragData = {
+  kind: 'existing';
+  uid: string;
+  atomType: string;
+  parentId: string | null;
 };
+// Empty-container / root drop zone. `parentId: null` targets the root
+// (creates the root atom on first drop).
+export type ContainerDropData = { kind: 'container'; parentId: string | null };
 
-/**
- * Type guards. We treat the `data.current` field from dnd-kit as
- * `unknown` and narrow explicitly — cheaper than fighting generics
- * across the whole tree.
- */
 function isPaletteDrag(x: unknown): x is PaletteDragData {
   return !!x && typeof x === 'object' && (x as { kind?: unknown }).kind === 'palette';
 }
 function isExistingDrag(x: unknown): x is ExistingNodeDragData {
   return !!x && typeof x === 'object' && (x as { kind?: unknown }).kind === 'existing';
 }
-function isContainerDrop(x: unknown): x is ContainerDropData {
-  return !!x && typeof x === 'object' && (x as { kind?: unknown }).kind === 'container';
+
+/** dnd-kit sortable context injected into a sortable item's data. */
+type SortableInfo = { containerId: string; index: number; items: string[] };
+
+type DropTarget = { parentId: string | null; insertBeforeId?: string };
+
+/**
+ * Resolve where a drop lands: the target container's `_uid` (`null` =
+ * root zone) and the sibling to insert before (`undefined` = append).
+ *
+ * Over a sortable node → its SortableContext is the container; for a
+ * same-container reorder we translate the sortable index to an
+ * insert-before id (moving DOWN inserts after the target); a cross-
+ * container / palette drop inserts before the target node. Over a zone
+ * → append into that container.
+ */
+function resolveDrop(active: Active, over: Over): DropTarget | null {
+  const od = (over.data.current ?? {}) as {
+    kind?: string;
+    uid?: string;
+    atomType?: string;
+    parentId?: string | null;
+    sortable?: SortableInfo;
+  };
+  if (od.sortable) {
+    const overContainer = od.sortable.containerId;
+    const items = od.sortable.items;
+    const overIndex = od.sortable.index;
+    const ad = (active.data.current ?? {}) as { sortable?: SortableInfo };
+    const sameContainer = ad.sortable?.containerId === overContainer;
+    if (sameContainer && typeof ad.sortable?.index === 'number') {
+      // Reorder within one container (works for leaf nodes AND sibling
+      // containers). Moving DOWN lands after the target (before its next
+      // sibling / append when last); moving UP lands before it.
+      const oldIndex = ad.sortable.index;
+      if (oldIndex === overIndex) return null; // dropped on itself
+      const insertBeforeId =
+        oldIndex < overIndex ? items[overIndex + 1] : items[overIndex];
+      return { parentId: overContainer, insertBeforeId };
+    }
+    // Cross-container move / palette drop onto an existing node. Dropping
+    // ONTO a container means "into it" (append); onto a leaf means "insert
+    // before it" in the leaf's container. Using the target's atomType — not
+    // an inner drop-zone hit — makes this robust to pointer precision.
+    if (od.atomType && CONTAINER_TYPES.has(od.atomType) && od.uid) {
+      return { parentId: od.uid, insertBeforeId: undefined };
+    }
+    return { parentId: overContainer, insertBeforeId: od.uid };
+  }
+  // A bare container drop zone (empty container / root / padding).
+  if (od.kind === 'container') {
+    return { parentId: od.parentId ?? null, insertBeforeId: undefined };
+  }
+  return null;
 }
-function isReorderDrop(x: unknown): x is ReorderDropData {
-  return !!x && typeof x === 'object' && (x as { kind?: unknown }).kind === 'reorder';
-}
+
+/** Atom types that hold children — dropping ONTO one means "drop into it". */
+const CONTAINER_TYPES = new Set([
+  'form', 'stack', 'section', 'card', 'container', 'grid', 'box',
+  'tabs', 'accordion', 'tooltip', 'badge',
+]);
+
+const screenReaderInstructions = {
+  draggable:
+    'To pick up an element, press space or enter. While dragging, use the arrow keys to move it. Press space or enter again to drop, or escape to cancel.',
+};
 
 export function DndProvider({ children }: { children: ReactNode }) {
   const dispatch = useBuilderDispatch();
-  // Preview payload for the DragOverlay — set for BOTH palette drags and
+  // Preview payload for the DragOverlay — set for BOTH palette and
   // existing-node drags so a ghost follows the pointer either way.
   const [dragging, setDragging] = useState<{ atomType: string } | null>(null);
 
-  // PointerSensor's activationConstraint prevents the drag from
-  // hijacking a plain click on the palette item — a small distance
-  // has to be travelled before a drag starts.
   const sensors = useSensors(
+    // A small activation distance keeps a plain click on a palette item /
+    // canvas card from starting a drag.
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor),
+    // sortableKeyboardCoordinates wires arrow-key reordering.
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const onDragStart = (e: DragStartEvent) => {
     const data = e.active.data.current;
-    // Both palette and existing-node drags get a floating ghost. The
-    // source card only fades to 0.35 opacity in place (its transform is
-    // never applied), so without an overlay an existing-node drag had
-    // nothing following the pointer — it read as "dead".
     if (isPaletteDrag(data)) setDragging({ atomType: data.atomType });
     else if (isExistingDrag(data)) setDragging({ atomType: data.atomType });
   };
 
   const onDragEnd = (e: DragEndEvent) => {
     setDragging(null);
-    const src = e.active.data.current;
-    const dst = e.over?.data.current;
+    const { active, over } = e;
+    if (!over) return;
+    const src = active.data.current;
+    const target = resolveDrop(active, over);
+    if (!target) return;
 
-    // Palette drop → add a new node.
     if (isPaletteDrag(src)) {
-      // Onto a reorder strip → insert at that exact position (previously
-      // the drop was silently lost, forcing add-then-reorder).
-      if (isReorderDrop(dst)) {
-        dispatch({
-          type: 'addNode',
-          parentId: dst.parentId,
-          nodeType: src.atomType,
-          insertBeforeId: dst.insertBeforeId,
-        });
-        return;
-      }
-      // Onto a container's inner area → append.
-      if (isContainerDrop(dst)) {
-        dispatch({ type: 'addNode', parentId: dst.parentId, nodeType: src.atomType });
-      }
-      return;
-    }
-
-    // Existing-node drop → either append into a container (existing
-    // behavior) or insert before a sibling (new — solves Grid→Grid).
-    if (!isExistingDrag(src)) return;
-
-    if (isReorderDrop(dst)) {
-      // Insert-before another sibling under `parentId`.
       dispatch({
-        type: 'moveNode',
-        id: src.uid,
-        newParentId: dst.parentId,
-        insertBeforeId: dst.insertBeforeId,
+        type: 'addNode',
+        parentId: target.parentId,
+        nodeType: src.atomType,
+        insertBeforeId: target.insertBeforeId,
       });
       return;
     }
-    if (isContainerDrop(dst)) {
-      // Moving into the empty root drop zone is meaningless once a
-      // root already exists — the reducer no-ops on null parent.
-      if (dst.parentId === null) return;
-      dispatch({ type: 'moveNode', id: src.uid, newParentId: dst.parentId });
+    if (isExistingDrag(src)) {
+      // The root zone (parentId null) is only meaningful for the first
+      // atom; an existing node can't move into it.
+      if (target.parentId === null) return;
+      dispatch({
+        type: 'moveNode',
+        id: src.uid,
+        newParentId: target.parentId,
+        insertBeforeId: target.insertBeforeId,
+      });
     }
   };
 
   const onDragCancel = () => setDragging(null);
 
+  const announcements = {
+    onDragStart({ active }: { active: Active }) {
+      return `Picked up ${labelOf(active)}.`;
+    },
+    onDragOver({ active, over }: { active: Active; over: Over | null }) {
+      if (!over) return `${labelOf(active)} is no longer over a drop target.`;
+      return `${labelOf(active)} is over ${labelOf(over)}.`;
+    },
+    onDragEnd({ active, over }: { active: Active; over: Over | null }) {
+      return over ? `${labelOf(active)} was dropped onto ${labelOf(over)}.` : 'Drop cancelled.';
+    },
+    onDragCancel({ active }: { active: Active }) {
+      return `Dragging ${labelOf(active)} was cancelled.`;
+    },
+  };
+
   return (
     <DndContext
       sensors={sensors}
-      // `pointerWithin`: the drop target is whichever droppable rect
-      // contains the current pointer position. Without this, dnd-kit
-      // uses `rectIntersection` on the DragOverlay's rect — our
-      // preview is a small pill, so intersection with the drop zone
-      // was flaky and often left `over === null` at drop time,
-      // silently discarding the drop.
-      collisionDetection={pointerWithin}
+      collisionDetection={closestCenter}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       onDragCancel={onDragCancel}
+      accessibility={{ announcements, screenReaderInstructions }}
     >
       {children}
-      {/*
-       * `snapCenterToCursor` re-centers the overlay on the pointer.
-       * Without it, dnd-kit anchors the overlay to the ORIGINAL rect
-       * of the draggable — so a small preview appears floating above
-       * and to the left of the cursor whenever the palette item was
-       * wider than the preview itself.
-       */}
       <DragOverlay dropAnimation={null} modifiers={[snapCenterToCursor]}>
         {dragging ? <PaletteDragPreview atomType={dragging.atomType} /> : null}
       </DragOverlay>
     </DndContext>
   );
+}
+
+/** Human label for a11y announcements. */
+function labelOf(x: Active | Over): string {
+  const d = x.data.current as { atomType?: string; kind?: string } | undefined;
+  return d?.atomType ?? (d?.kind === 'container' ? 'a drop zone' : 'an element');
 }

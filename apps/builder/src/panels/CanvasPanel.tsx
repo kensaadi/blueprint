@@ -16,14 +16,19 @@
  */
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { Typography } from '@dashforge/tw';
-import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
 import { useBuilderState, useBuilderDispatch } from '../state/BuilderStateContext';
 import { useIsCollapsed, useToggleCollapse } from '../state/CollapseContext';
 import type { BlueprintNode } from '../state/types';
 import type {
   ContainerDropData,
   ExistingNodeDragData,
-  ReorderDropData,
 } from '../dnd/DndProvider';
 import { iconForType } from '../data/typeIcons';
 import { isAtomName } from '@dashforge/blueprint-core';
@@ -405,6 +410,8 @@ function NodeCard({
   depth,
   wrapperStyle,
   skipStackMargin,
+  parentId,
+  parentPaneled,
 }: {
   node: BlueprintNode;
   selectedId: string | null;
@@ -417,6 +424,13 @@ function NodeCard({
    * children — the parent is a grid/row and handles gap itself.
    */
   skipStackMargin?: boolean;
+  /** The parent container's `_uid` — the SortableContext this card lives in. */
+  parentId?: string | null;
+  /**
+   * Parent is tabs/accordion: panels reorder via the Inspector (to keep
+   * items↔children in sync), so canvas drag-reorder is disabled here.
+   */
+  parentPaneled?: boolean;
 }) {
   const dispatch = useBuilderDispatch();
   const isSelected = node._uid === selectedId;
@@ -450,14 +464,29 @@ function NodeCard({
   // ambiguity of "drag the root into itself" mid-motion.
   const isRoot = depth === 0;
 
-  // Non-root nodes become drag sources. Payload declares "this is an
-  // existing node" so the reducer routes into `moveNode` instead of
-  // `addNode` at drop time.
-  const dragData: ExistingNodeDragData = { kind: 'existing', uid: node._uid, atomType: node.type };
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `node:${node._uid}`,
+  // Non-root nodes are sortable within their container — reorder, cross-
+  // container move, and keyboard DnD all flow through @dnd-kit/sortable.
+  // Payload declares "existing node" + its parent so `onDragEnd` can
+  // resolve the target container/index. Panels of tabs/accordion reorder
+  // via the Inspector, so their canvas drag is disabled (items↔children
+  // must stay in lockstep).
+  const dragData: ExistingNodeDragData = {
+    kind: 'existing',
+    uid: node._uid,
+    atomType: node.type,
+    parentId: parentId ?? null,
+  };
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: node._uid,
     data: dragData,
-    disabled: isRoot,
+    disabled: isRoot || !!parentPaneled,
   });
 
   return (
@@ -485,7 +514,15 @@ function NodeCard({
         // their own gap via the drop zone layout style.
         marginTop: skipStackMargin || depth === 0 ? 0 : 8,
         cursor: isRoot ? 'pointer' : 'grab',
-        opacity: isDragging ? 0.35 : 1,
+        opacity: isDragging ? 0.4 : 1,
+        // Sortable transform/transition open the gap + animate siblings as
+        // a card is dragged (the DragOverlay ghost follows the pointer).
+        // Reorder transforms are translate-only — build the string inline
+        // to avoid a direct dep on @dnd-kit/utilities.
+        transform: transform
+          ? `translate3d(${Math.round(transform.x)}px, ${Math.round(transform.y)}px, 0)`
+          : undefined,
+        transition,
         // Parent grid injects `gridColumn: span N` here so the card
         // occupies the right cell width without an extra wrapper div.
         ...wrapperStyle,
@@ -624,132 +661,56 @@ function NodeCard({
                 Drop atoms here
               </Typography>
             ) : (
-              <>
-              {node.children.map((c, idx) => {
-                // Only pin a `grid-column: span N` when the child
-                // opts in with a layoutHint. Without hints, the grid
-                // is in equal-fill mode and CSS auto-placement gives
-                // each card one cell — an explicit span here would
-                // over-shoot the `repeat(cols, 1fr)` template.
-                const gridStyle =
-                  parentIsGrid && c.layoutHint?.size !== undefined
-                    ? { gridColumn: `span ${childGridSpan(c, cols)}` }
-                    : undefined;
-                return (
-                  <Fragment key={c._uid}>
-                    {/*
-                      Insert-before drop strip. Renders above each
-                      sibling as a thin band; when an existing node is
-                      dragged over it, a colored line appears and the
-                      drop targets "put me right before this sibling".
-                      Solves Grid→Grid reorder (which the original
-                      container-only drop scheme couldn't reach).
-                      Skipped when parent is a grid — the strip would
-                      become a grid child and consume a cell, pushing
-                      hinted siblings out of their `grid-column: span N`
-                      slots. Grid reorder still works via drag on the
-                      cards themselves.
-                    */}
-                    {!parentIsGrid && (
-                      <ReorderStrip
+              // Each container is a SortableContext keyed by its `_uid`; the
+              // strategy differs for grid (2D) vs stacked (vertical) so the
+              // gap-opening animation + keyboard reorder feel right.
+              <SortableContext
+                id={node._uid}
+                items={node.children.map((c) => c._uid)}
+                strategy={parentIsGrid ? rectSortingStrategy : verticalListSortingStrategy}
+              >
+                {node.children.map((c, idx) => {
+                  // Only pin a `grid-column: span N` when the child opts in
+                  // with a layoutHint. Without hints, the grid is in equal-
+                  // fill mode and CSS auto-placement gives each card one cell.
+                  const gridStyle =
+                    parentIsGrid && c.layoutHint?.size !== undefined
+                      ? { gridColumn: `span ${childGridSpan(c, cols)}` }
+                      : undefined;
+                  return (
+                    <Fragment key={c._uid}>
+                      {parentIsPaneled && (
+                        <div
+                          className="flex items-center gap-1.5 px-1 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide"
+                          style={{ color: 'var(--bd-text-faint)' }}
+                        >
+                          <i className="ti ti-layout-navbar-collapse text-[12px]" aria-hidden />
+                          {node.type === 'accordion' ? 'Section' : 'Tab'} {idx + 1}
+                          {panelLabel(panelItems[idx]) && (
+                            <span style={{ color: 'var(--bd-text-soft)' }}>
+                              · {panelLabel(panelItems[idx])}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <NodeCard
+                        node={c}
                         parentId={node._uid}
-                        insertBeforeId={c._uid}
-                        index={idx}
+                        parentPaneled={parentIsPaneled}
+                        selectedId={selectedId}
+                        hoveredId={hoveredId}
+                        depth={depth + 1}
+                        wrapperStyle={gridStyle}
+                        skipStackMargin={parentIsGrid || parentIsFlexStack}
                       />
-                    )}
-                    {parentIsPaneled && (
-                      <div
-                        className="flex items-center gap-1.5 px-1 pb-0.5 pt-1.5 text-[10px] font-semibold uppercase tracking-wide"
-                        style={{ color: 'var(--bd-text-faint)' }}
-                      >
-                        <i className="ti ti-layout-navbar-collapse text-[12px]" aria-hidden />
-                        {node.type === 'accordion' ? 'Section' : 'Tab'} {idx + 1}
-                        {panelLabel(panelItems[idx]) && (
-                          <span style={{ color: 'var(--bd-text-soft)' }}>
-                            · {panelLabel(panelItems[idx])}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    <NodeCard
-                      node={c}
-                      selectedId={selectedId}
-                      hoveredId={hoveredId}
-                      depth={depth + 1}
-                      wrapperStyle={gridStyle}
-                      skipStackMargin={parentIsGrid || parentIsFlexStack}
-                    />
-                  </Fragment>
-                );
-              })}
-              {/* Trailing strip — insert / append precisely at the end.
-                  `__end__` never matches a sibling, so the reducer appends. */}
-              {!parentIsGrid && (
-                <ReorderStrip
-                  parentId={node._uid}
-                  insertBeforeId="__end__"
-                  index={node.children.length}
-                />
-              )}
-              </>
+                    </Fragment>
+                  );
+                })}
+              </SortableContext>
             )}
           </ContainerDropZone>
         );
       })()}
-    </div>
-  );
-}
-
-/**
- * Thin "insert before this sibling" drop band. Invisible by default
- * (2px transparent band with generous hit area); turns into a solid
- * accent bar when an existing-node drag hovers over it. Only reacts
- * to existing-node drags; palette drops still land on the container's
- * inner drop area.
- *
- * The hit area is 8px tall (half above, half below the visible line)
- * so users don't have to be pixel-perfect. Zero cost when idle — the
- * band is `pointer-events: none` unless dnd-kit registers a hover.
- */
-function ReorderStrip({
-  parentId,
-  insertBeforeId,
-  index,
-}: {
-  parentId: string;
-  insertBeforeId: string;
-  index: number;
-}) {
-  const data: ReorderDropData = { kind: 'reorder', parentId, insertBeforeId };
-  const { setNodeRef, isOver } = useDroppable({
-    id: `reorder:${parentId}:${insertBeforeId}`,
-    data,
-  });
-  return (
-    <div
-      ref={setNodeRef}
-      data-reorder-strip
-      data-reorder-index={index}
-      style={{
-        // Taller hit band (net layout impact stays ~0 via the negative
-        // margins) so the reorder target isn't pixel-thin to aim at.
-        height: 12,
-        marginTop: index === 0 ? -4 : -6,
-        marginBottom: -6,
-        position: 'relative',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          inset: '5px 4px',
-          borderRadius: 2,
-          background: isOver ? 'var(--bd-accent)' : 'transparent',
-          opacity: isOver ? 1 : 0,
-          transition: 'opacity 120ms',
-          pointerEvents: 'none',
-        }}
-      />
     </div>
   );
 }
