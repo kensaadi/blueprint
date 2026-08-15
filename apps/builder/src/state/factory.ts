@@ -126,8 +126,25 @@ function defaultPropsFor(type: AtomType): Record<string, unknown> {
     // avatarProps has no `alt` — the accessible name derives from
     // `name` (initials fallback) or the wrapping component.
     case 'avatar':   return {};
-    case 'tooltip':  return { content: 'Tooltip text' };
+    case 'tooltip':  return { content: 'Tooltip text', icon: 'info-circle' };
     case 'calendar': return {};
+
+    // Media
+    case 'image':
+      return {
+        src: 'https://picsum.photos/seed/blueprint/800/450',
+        alt: 'Image',
+        aspectRatio: '16 / 9',
+        rounded: 'md',
+      };
+    case 'video':
+      return {
+        src: 'https://mdn.github.io/shared-assets/videos/flower.mp4',
+        poster: 'https://picsum.photos/seed/blueprint-video/800/450',
+        aspectRatio: '16 / 9',
+        rounded: 'md',
+        controls: true,
+      };
 
     default: return {};
   }

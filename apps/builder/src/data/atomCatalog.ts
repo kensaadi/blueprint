@@ -103,4 +103,12 @@ export const ATOM_CATEGORIES: AtomCategory[] = [
       { type: 'calendar', icon: 'calendar' },
     ],
   },
+  {
+    id: 'media',
+    label: 'Media',
+    atoms: [
+      { type: 'image', icon: 'photo' },
+      { type: 'video', icon: 'video' },
+    ],
+  },
 ];

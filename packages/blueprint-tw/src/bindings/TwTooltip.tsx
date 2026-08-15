@@ -1,10 +1,12 @@
 import { Children, isValidElement, type ReactNode } from 'react';
 import { Tooltip } from '@dashforge/tw';
 import type { InlineText as InlineTextValue } from '@dashforge/blueprint-core';
-import { InlineText } from '@dashforge/blueprint-runtime';
+import { InlineText, useIcon, renderIcon } from '@dashforge/blueprint-runtime';
 
 type Props = {
   content: InlineTextValue;
+  /** Tabler icon for the standalone trigger (when no child). Default: info-circle. */
+  icon?: string;
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
   hideArrow?: boolean;
@@ -14,24 +16,30 @@ type Props = {
 };
 
 export function TwTooltip({
-  content, side = 'top', align = 'center', hideArrow, delayDuration, sideOffset,
+  content, icon, side = 'top', align = 'center', hideArrow, delayDuration, sideOffset,
   children,
 }: Props) {
-  // @dashforge/tw Tooltip uses RadixTooltip.Trigger with asChild=true —
-  // the immediate child receives refs + event listeners via Radix Slot.
-  // Function-component children (TwIconButton, etc.) don't forward refs,
-  // so we wrap in a native <span> so Slot can attach to a DOM node.
-  // The span doesn't break focus order: child stays in the tab sequence.
-  //
-  // Testing note: Radix Tooltip uses native pointerenter/pointerleave +
-  // focus events. Synthetic events via `Element.dispatchEvent` won't
-  // trigger the popup (the Radix internal pointer-tracking layer is
-  // listening on a Provider-level context that's only updated by real
-  // user input). For UI tests that need to assert tooltip content, use
-  // `@testing-library/user-event` (which simulates real pointer events)
-  // rather than `fireEvent` / programmatic dispatch.
-  const arr = Children.toArray(children);
-  const anchor = arr.find(isValidElement) ?? <span />;
+  // @dashforge/tw Tooltip uses RadixTooltip.Trigger with asChild=true — the
+  // immediate child is the trigger. Two modes:
+  //  • child present → wrap it (tooltip on an existing element).
+  //  • no child     → render a standalone info-icon trigger (the "ⓘ" hint),
+  //    inline + baseline-aligned so it sits AFTER a preceding label/text.
+  const iconId = icon ?? 'info-circle';
+  const iconEntry = useIcon(iconId); // hook: called unconditionally
+  const child = Children.toArray(children).find(isValidElement);
+
+  const anchor = child ? (
+    <span style={{ display: 'inline-flex' }}>{child}</span>
+  ) : (
+    <button
+      type="button"
+      aria-label="More information"
+      className="ml-1 inline-flex items-center justify-center align-middle text-neutral-500 hover:text-neutral-700 cursor-help"
+    >
+      {renderIcon(iconEntry, iconId, { size: 18, 'aria-hidden': true })}
+    </button>
+  );
+
   return (
     <Tooltip
       content={<InlineText value={content} />}
@@ -41,7 +49,7 @@ export function TwTooltip({
       delayDuration={delayDuration}
       sideOffset={sideOffset}
     >
-      <span style={{ display: 'inline-flex' }}>{anchor}</span>
+      {anchor}
     </Tooltip>
   );
 }

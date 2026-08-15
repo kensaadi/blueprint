@@ -38,10 +38,17 @@ import { AuditPanel } from './AuditPanel';
 import { TeamTemplatesPanel } from './TeamTemplatesPanel';
 import { GettingStartedChecklist } from './GettingStartedChecklist';
 
-/** Types recognised as containers — they render an inner drop area. */
+/**
+ * Types recognised as containers — they render an inner drop area.
+ *
+ * Includes the single-child "wrapper" atoms (`tooltip`, `badge`): they
+ * anchor to a child node (rendered as the trigger / badged element), so
+ * they need a drop zone to receive that child. Their bindings use only the
+ * first child as the anchor.
+ */
 const CONTAINER_TYPES = new Set([
   'form', 'stack', 'section', 'card', 'container', 'grid', 'box',
-  'tabs', 'accordion',
+  'tabs', 'accordion', 'tooltip', 'badge',
 ]);
 
 

@@ -29,7 +29,7 @@
     "@dashforge/forms": "^1.0.0",
     "@dashforge/rbac": "^1.0.0",
     "@dashforge/theme-core": "1.0.0",
-    "@dashforge/ui": "1.0.0",
+    "@dashforge/ui": "^1.3.1",
     "@hookform/resolvers": "^5.4.0",
     "react-hook-form": "^7.80.0"
   },

@@ -224,6 +224,13 @@ const accordionProps = z.discriminatedUnion('type', [
  */
 const tooltipProps = z.object({
   content: inlineTextSchema,
+  /**
+   * Tabler icon name for the standalone trigger shown when the tooltip has
+   * no child element — the "ⓘ info-hint" pattern. Ignored when the tooltip
+   * wraps a child (that child becomes the trigger). Defaults to
+   * `info-circle` in the binding.
+   */
+  icon: z.string().optional(),
   side: z.enum(['top', 'right', 'bottom', 'left']).optional(),
   align: z.enum(['start', 'center', 'end']).optional(),
   hideArrow: z.boolean().optional(),
@@ -321,12 +328,71 @@ const avatarProps = z.object({
   color: intentColor.optional(),
 }).strict();
 
+/** CSS object-fit — shared by the media atoms (image / video). */
+const objectFit = z.enum(['cover', 'contain', 'fill', 'none', 'scale-down']);
+
+const imageProps = z.object({
+  /** Image source URL (http(s) / data:). Required. */
+  src: z.string().min(1),
+  /** Alternative text (a11y). Required; use `''` for purely decorative images. */
+  alt: z.string(),
+  /** Locks the box shape before load (no layout shift) — a ratio number (16/9) or a CSS aspect-ratio string. */
+  aspectRatio: z.union([z.number(), z.string()]).optional(),
+  fit: objectFit.optional(),
+  rounded: roundedToken.optional(),
+  loading: z.enum(['lazy', 'eager']).optional(),
+  /** Show a skeleton while loading. Requires a reserved box (aspectRatio, or width+height). */
+  showSkeleton: z.boolean().optional(),
+}).strict();
+
+const videoProps = z.object({
+  /** Video source URL. Optional so `<source>` children can be authored instead. */
+  src: z.string().min(1).optional(),
+  /** Poster image shown before playback / while loading (doubles as the loading visual). */
+  poster: z.string().optional(),
+  aspectRatio: z.union([z.number(), z.string()]).optional(),
+  fit: objectFit.optional(),
+  rounded: roundedToken.optional(),
+  /** Show the native player controls. */
+  controls: z.boolean().optional(),
+  /** Autoplay (requires `muted` in most browsers). */
+  autoPlay: z.boolean().optional(),
+  loop: z.boolean().optional(),
+  muted: z.boolean().optional(),
+  /** Keep playback inline on iOS instead of fullscreen. */
+  playsInline: z.boolean().optional(),
+  preload: z.enum(['none', 'metadata', 'auto']).optional(),
+  /** Show a skeleton while the first frame loads (skipped when a poster is set). */
+  showSkeleton: z.boolean().optional(),
+}).strict();
+
+/**
+ * Label-help tooltip for a form field — a `ⓘ` in the label row revealing
+ * `content` on hover / focus. Mirrors the `tooltip` prop on the underlying
+ * `@dashforge/tw|ui` inputs; the flavor binding resolves `icon` (a Tabler
+ * name) and wraps `content` before forwarding. String shorthand or config.
+ */
+const fieldTooltipSchema = z.union([
+  z.string(),
+  z.object({
+    content: inlineTextSchema,
+    /** Tabler icon name for the trigger. Defaults to info-circle in the component. */
+    icon: z.string().optional(),
+    /** Icon placement relative to the label. @default 'after' */
+    position: z.enum(['before', 'after']).optional(),
+    /** Which side the popup appears on. @default 'top' */
+    side: z.enum(['top', 'right', 'bottom', 'left']).optional(),
+  }).strict(),
+]);
+
 const fieldProps = z.object({
   name: z.string().min(1, 'field.name is required and must be non-empty'),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   /** Plain string OR InlineNode[] — rich text supported for format hints with `code` etc. */
   helperText: inlineTextSchema.optional(),
+  /** Label-help tooltip (ⓘ in the label row). String shorthand or config. */
+  tooltip: fieldTooltipSchema.optional(),
   type: z.string().optional(),
   required: z.boolean().optional(),
 }).strict();
@@ -489,6 +555,8 @@ export const ATOM_PROP_SCHEMAS = {
   badge:        badgeProps,
   chip:         chipProps,
   avatar:       avatarProps,
+  image:        imageProps,
+  video:        videoProps,
   tabs:         tabsProps,
   accordion:    accordionProps,
   tooltip:      tooltipProps,
@@ -514,6 +582,9 @@ export const ATOM_PROP_SCHEMAS = {
 export const ATOM_NAMES = Object.keys(ATOM_PROP_SCHEMAS) as Array<keyof typeof ATOM_PROP_SCHEMAS>;
 
 export type AtomName = keyof typeof ATOM_PROP_SCHEMAS;
+
+/** Resolved shape of a form field's `tooltip` prop (string shorthand or config). */
+export type FieldTooltip = z.infer<typeof fieldTooltipSchema>;
 
 export function isAtomName(value: string): value is AtomName {
   return value in ATOM_PROP_SCHEMAS;

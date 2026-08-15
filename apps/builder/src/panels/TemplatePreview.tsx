@@ -17,6 +17,7 @@ import { Component, type ReactNode } from 'react';
 import { DashBlueprint } from '@dashforge/blueprint';
 import type { BlueprintNode } from '@dashforge/blueprint-core';
 import type { Contract } from '../state/types';
+import { tablerIconRegistry } from '../data/tablerIconRegistry';
 
 class PreviewBoundary extends Component<
   { children: ReactNode },
@@ -60,6 +61,7 @@ export default function TemplatePreview({
           version="1.0"
           lib="tw"
           root={contract.root as unknown as BlueprintNode}
+          icons={tablerIconRegistry}
           validationMode="lenient"
         />
       </div>

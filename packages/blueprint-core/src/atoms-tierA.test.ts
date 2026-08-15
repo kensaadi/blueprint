@@ -117,3 +117,54 @@ describe('schema — avatar', () => {
     expect(s.safeParse({ size: 'huge' }).success).toBe(false);
   });
 });
+
+describe('schema — image', () => {
+  const s = ATOM_PROP_SCHEMAS.image;
+  test('accepts src + alt (both required)', () => {
+    expect(s.safeParse({ src: 'https://x.dev/a.jpg', alt: 'A' }).success).toBe(true);
+  });
+  test('accepts empty alt (decorative)', () => {
+    expect(s.safeParse({ src: '/a.jpg', alt: '' }).success).toBe(true);
+  });
+  test('accepts aspectRatio number and string', () => {
+    expect(s.safeParse({ src: '/a.jpg', alt: 'A', aspectRatio: 1.777 }).success).toBe(true);
+    expect(s.safeParse({ src: '/a.jpg', alt: 'A', aspectRatio: '16 / 9' }).success).toBe(true);
+  });
+  test('accepts fit + rounded + loading + showSkeleton', () => {
+    expect(s.safeParse({
+      src: '/a.jpg', alt: 'A', fit: 'contain', rounded: 'lg', loading: 'eager', showSkeleton: false,
+    }).success).toBe(true);
+  });
+  test('rejects missing src', () => {
+    expect(s.safeParse({ alt: 'A' }).success).toBe(false);
+  });
+  test('rejects missing alt', () => {
+    expect(s.safeParse({ src: '/a.jpg' }).success).toBe(false);
+  });
+  test('rejects unknown fit', () => {
+    expect(s.safeParse({ src: '/a.jpg', alt: 'A', fit: 'squish' }).success).toBe(false);
+  });
+  test('rejects unknown prop (strict)', () => {
+    expect(s.safeParse({ src: '/a.jpg', alt: 'A', sx: 'x' }).success).toBe(false);
+  });
+});
+
+describe('schema — video', () => {
+  const s = ATOM_PROP_SCHEMAS.video;
+  test('accepts empty {} (src optional for <source> children)', () => {
+    expect(s.safeParse({}).success).toBe(true);
+  });
+  test('accepts full flag set', () => {
+    expect(s.safeParse({
+      src: '/a.mp4', poster: '/p.jpg', aspectRatio: '16 / 9', fit: 'cover', rounded: 'md',
+      controls: true, autoPlay: true, loop: true, muted: true, playsInline: true,
+      preload: 'metadata', showSkeleton: false,
+    }).success).toBe(true);
+  });
+  test('rejects unknown preload', () => {
+    expect(s.safeParse({ preload: 'eager' }).success).toBe(false);
+  });
+  test('rejects unknown prop (strict)', () => {
+    expect(s.safeParse({ src: '/a.mp4', fallback: 'x' }).success).toBe(false);
+  });
+});

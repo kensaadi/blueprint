@@ -6,8 +6,8 @@
 
 import { TextField } from '@dashforge/tw';
 import type { AccessRequirement } from '@dashforge/rbac';
-import type { InlineText as InlineTextValue, TranslatableString } from '@dashforge/blueprint-core';
-import { InlineText, useTranslatable } from '@dashforge/blueprint-runtime';
+import type { InlineText as InlineTextValue, TranslatableString, FieldTooltip } from '@dashforge/blueprint-core';
+import { InlineText, useTranslatable, useFieldTooltip } from '@dashforge/blueprint-runtime';
 import { useTwFormCtx } from '../formContext';
 
 type Props = {
@@ -17,15 +17,18 @@ type Props = {
   helperText?: InlineTextValue;
   type?: string;
   required?: boolean;
+  /** Label-help tooltip (ⓘ in the label row). Resolved + forwarded to the dashforge input. */
+  tooltip?: FieldTooltip;
   /** Injected by compileNode from `node.disabled` (top-level on BlueprintNode). */
   disabled?: boolean;
   /** Injected by compileNode from `node.access`. Resolved by `useAccessState` in the underlying dashforge component. */
   access?: AccessRequirement;
 };
 
-export function TwField({ name, label, placeholder, helperText, type = 'text', required, disabled, access }: Props) {
+export function TwField({ name, label, placeholder, helperText, type = 'text', required, disabled, access, tooltip }: Props) {
   const resolvedLabel = useTranslatable(label);
   const resolvedPlaceholder = useTranslatable(placeholder);
+  const resolvedTooltip = useFieldTooltip(tooltip);
   const inForm = useTwFormCtx() !== null;
   if (!name) {
     return (
@@ -55,6 +58,7 @@ export function TwField({ name, label, placeholder, helperText, type = 'text', r
       required={required}
       disabled={disabled}
       access={access}
+      tooltip={resolvedTooltip}
     />
   );
 }

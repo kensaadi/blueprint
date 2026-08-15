@@ -39,6 +39,8 @@ export {
 
 // ─── Inline rich text renderer (bold / italic / link / break / $t) ────
 export { InlineText } from './InlineText';
+export { useFieldTooltip } from './useFieldTooltip';
+export type { ResolvedFieldTooltip } from './useFieldTooltip';
 
 // ─── Form-values context: publisher (mounted by the flavor form adapter)
 // and the safe reader (used by InlineText + advanced custom nodes). ───

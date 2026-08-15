@@ -28,6 +28,8 @@ import { TwContainer } from './bindings/TwContainer';
 import { TwBadge } from './bindings/TwBadge';
 import { TwChip } from './bindings/TwChip';
 import { TwAvatar } from './bindings/TwAvatar';
+import { TwImage } from './bindings/TwImage';
+import { TwVideo } from './bindings/TwVideo';
 import { TwTabs } from './bindings/TwTabs';
 import { TwAccordion } from './bindings/TwAccordion';
 import { TwTooltip } from './bindings/TwTooltip';
@@ -53,6 +55,8 @@ export const twRegistry: Registry = {
   badge: TwBadge,
   chip: TwChip,
   avatar: TwAvatar,
+  image: TwImage,
+  video: TwVideo,
   tabs: TwTabs,
   accordion: TwAccordion,
   tooltip: TwTooltip,

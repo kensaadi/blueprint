@@ -1,10 +1,12 @@
 import { Children, isValidElement, cloneElement, type ReactNode, type ReactElement } from 'react';
-import { Tooltip } from '@mui/material';
+import { Tooltip, Box } from '@mui/material';
 import type { InlineText as InlineTextValue } from '@dashforge/blueprint-core';
-import { InlineText } from '@dashforge/blueprint-runtime';
+import { InlineText, useIcon, renderIcon } from '@dashforge/blueprint-runtime';
 
 type Props = {
   content: InlineTextValue;
+  /** Tabler icon for the standalone trigger (when no child). Default: info-circle. */
+  icon?: string;
   side?: 'top' | 'right' | 'bottom' | 'left';
   align?: 'start' | 'center' | 'end';
   hideArrow?: boolean;
@@ -24,23 +26,41 @@ const PLACEMENT_MAP: Record<
 };
 
 export function MuiTooltip({
-  content, side = 'top', align = 'center', hideArrow, delayDuration = 200,
+  content, icon, side = 'top', align = 'center', hideArrow, delayDuration = 200,
   children,
 }: Props) {
-  const arr = Children.toArray(children);
-  // MUI Tooltip refuses non-element children (it needs a ref forwarder).
-  // Wrap raw text / multiple children in a <span> defensively.
+  const iconId = icon ?? 'info-circle';
+  const iconEntry = useIcon(iconId); // hook: called unconditionally
+  const first = Children.toArray(children).find(isValidElement) as ReactElement | undefined;
+
+  // Two modes: wrap an existing child, or render a standalone info-icon
+  // trigger (the "ⓘ" hint) inline + baseline-aligned, so it sits AFTER a
+  // preceding label/text. MUI Tooltip needs a ref-forwarding element child.
   let anchor: ReactElement;
-  const first = arr.find(isValidElement) as ReactElement | undefined;
   if (first) {
-    anchor = first;
+    anchor = typeof first.type === 'string' ? cloneElement(first) : first;
   } else {
-    anchor = <span>{children}</span>;
-  }
-  // Some MUI components (Button, IconButton) accept tooltip without issue.
-  // For native elements that may not forward ref properly, wrap.
-  if (typeof anchor.type === 'string') {
-    anchor = cloneElement(anchor);
+    anchor = (
+      <Box
+        component="button"
+        type="button"
+        aria-label="More information"
+        sx={{
+          ml: 0.5,
+          p: 0,
+          border: 0,
+          background: 'none',
+          display: 'inline-flex',
+          alignItems: 'center',
+          verticalAlign: 'middle',
+          color: 'text.secondary',
+          cursor: 'help',
+          '&:hover': { color: 'text.primary' },
+        }}
+      >
+        {renderIcon(iconEntry, iconId, { size: 18, 'aria-hidden': true })}
+      </Box>
+    );
   }
 
   return (

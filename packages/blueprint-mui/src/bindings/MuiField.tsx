@@ -7,8 +7,8 @@
 import { Alert } from '@mui/material';
 import { TextField } from '@dashforge/ui';
 import type { AccessRequirement } from '@dashforge/rbac';
-import type { InlineText as InlineTextValue, TranslatableString } from '@dashforge/blueprint-core';
-import { InlineText, useTranslatable } from '@dashforge/blueprint-runtime';
+import type { InlineText as InlineTextValue, TranslatableString, FieldTooltip } from '@dashforge/blueprint-core';
+import { InlineText, useTranslatable, useFieldTooltip } from '@dashforge/blueprint-runtime';
 import { useMuiFormCtx } from '../formContext';
 
 type Props = {
@@ -18,15 +18,18 @@ type Props = {
   helperText?: InlineTextValue;
   type?: string;
   required?: boolean;
+  /** Label-help tooltip (ⓘ in the label row). Resolved + forwarded to the dashforge input. */
+  tooltip?: FieldTooltip;
   /** Injected by compileNode from `node.disabled`. */
   disabled?: boolean;
   /** Injected by compileNode from `node.access`. */
   access?: AccessRequirement;
 };
 
-export function MuiField({ name, label, placeholder, helperText, type = 'text', required, disabled, access }: Props) {
+export function MuiField({ name, label, placeholder, helperText, type = 'text', required, disabled, access, tooltip }: Props) {
   const resolvedLabel = useTranslatable(label);
   const resolvedPlaceholder = useTranslatable(placeholder);
+  const resolvedTooltip = useFieldTooltip(tooltip);
   const inForm = useMuiFormCtx() !== null;
   if (!name) {
     return <Alert severity="error">Field node is missing required <code>name</code> prop.</Alert>;
@@ -50,6 +53,7 @@ export function MuiField({ name, label, placeholder, helperText, type = 'text', 
       required={required}
       disabled={disabled}
       access={access}
+      tooltip={resolvedTooltip}
       layout="stacked"
       fullWidth
     />

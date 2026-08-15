@@ -125,6 +125,8 @@ const AXIS_HINTS: Record<string, string> = {
     "The list of items to show. Each entry has its own shape — for tabs it's { id, label }, for breadcrumbs it's { label, href }, etc.",
   content:
     "The body content shown inside this element (accordion panel, tooltip text, etc.).",
+  'tooltip.icon':
+    "Tabler icon for the standalone trigger shown when the tooltip has no child (the ⓘ info-hint). Ignored when the tooltip wraps a child. Default: info-circle.",
   header:
     "The header text shown at the top of this accordion section.",
   current:

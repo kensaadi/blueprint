@@ -28,6 +28,8 @@ import { MuiContainer } from './bindings/MuiContainer';
 import { MuiBadge } from './bindings/MuiBadge';
 import { MuiChip } from './bindings/MuiChip';
 import { MuiAvatar } from './bindings/MuiAvatar';
+import { MuiImage } from './bindings/MuiImage';
+import { MuiVideo } from './bindings/MuiVideo';
 import { MuiTabs } from './bindings/MuiTabs';
 import { MuiAccordion } from './bindings/MuiAccordion';
 import { MuiTooltip } from './bindings/MuiTooltip';
@@ -53,6 +55,8 @@ export const muiRegistry: Registry = {
   badge: MuiBadge,
   chip: MuiChip,
   avatar: MuiAvatar,
+  image: MuiImage,
+  video: MuiVideo,
   tabs: MuiTabs,
   accordion: MuiAccordion,
   tooltip: MuiTooltip,

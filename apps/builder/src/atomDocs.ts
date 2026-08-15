@@ -105,7 +105,7 @@ const ATOM_DESCRIPTIONS: Record<AtomName, string> = {
   accordion:
     'Collapsible content groups — each group has a summary + expandable panel.',
   tooltip:
-    'Text tooltip rendered on hover / focus over a child element.',
+    'Hover / focus hint. With no child it renders a standalone info icon (ⓘ, pick any Tabler icon via `icon`) — drop it after a label. Drop a child inside to instead wrap that element as the trigger.',
   breadcrumbs:
     'Navigation breadcrumb trail with per-item icon + link support.',
   pagination:
@@ -114,6 +114,12 @@ const ATOM_DESCRIPTIONS: Record<AtomName, string> = {
   // Data display (Tier C)
   calendar:
     'Month / week / day calendar view — supports event lists and multiple configurations.',
+
+  // Media
+  image:
+    'Declarative image — aspect-lock (no layout shift), loading skeleton, and a graceful error fallback. Requires `src` + `alt`.',
+  video:
+    'Declarative video player — aspect-lock, poster + loading skeleton, controls by default. `autoPlay` needs `muted`.',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

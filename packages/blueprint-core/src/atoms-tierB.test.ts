@@ -98,6 +98,13 @@ describe('schema — tooltip', () => {
   test('accepts minimal valid', () => {
     expect(s.safeParse({ content: 'hi' }).success).toBe(true);
   });
+  test('accepts an icon (Tabler name for the standalone trigger)', () => {
+    expect(s.safeParse({ content: 'hi', icon: 'info-circle' }).success).toBe(true);
+    expect(s.safeParse({ content: 'hi', icon: 'help' }).success).toBe(true);
+  });
+  test('rejects a non-string icon', () => {
+    expect(s.safeParse({ content: 'hi', icon: 42 }).success).toBe(false);
+  });
   test('accepts every side × align combo', () => {
     for (const side of ['top', 'right', 'bottom', 'left'] as const) {
       for (const align of ['start', 'center', 'end'] as const) {
