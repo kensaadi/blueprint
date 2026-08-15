@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint-runtime",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Blueprint shared React runtime primitives — contexts, inline-text renderer, i18n hook, warn channel. Design-system neutral.",
   "license": "AGPL-3.0-only",
   "type": "module",

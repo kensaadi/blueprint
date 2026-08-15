@@ -1,0 +1,42 @@
+#!/usr/bin/env sh
+# Auto-bump Blueprint's lockstep version — once per push cycle.
+#
+# Policy (pre-launch, GitHub-only): every push carries a fresh patch version as
+# an audit marker. To get "per push" semantics from a pre-commit hook (the only
+# hook that can fold the bump into the pushed history without a double-push), we
+# bump ONLY on the first commit after a push — i.e. when there are no unpushed
+# commits yet. Later commits in the same cycle don't bump; the next push cycle
+# starts fresh. Net: exactly one bump per push.
+#
+# Skip once with:  git commit --no-verify   (or)   SKIP_BUMP=1 git commit ...
+[ "$SKIP_BUMP" = "1" ] && exit 0
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null) || exit 0
+
+# How many local commits are ahead of the remote-tracking branch?
+upstream="origin/$branch"
+if git rev-parse --verify --quiet "$upstream" >/dev/null 2>&1; then
+  unpushed=$(git rev-list "$upstream"..HEAD --count 2>/dev/null || echo 0)
+else
+  unpushed=0   # remote branch not known locally → treat as start of a cycle
+fi
+
+# Already have unpushed commits → this cycle was bumped on its first commit.
+[ "$unpushed" = "0" ] || exit 0
+
+repo_root=$(git rev-parse --show-toplevel)
+node "$repo_root/scripts/bump-version.mjs" >/dev/null || {
+  echo "pre-commit: version bump failed" >&2
+  exit 1
+}
+git add \
+  "$repo_root/packages/blueprint-core/package.json" \
+  "$repo_root/packages/blueprint-runtime/package.json" \
+  "$repo_root/packages/blueprint-tw/package.json" \
+  "$repo_root/packages/blueprint-mui/package.json" \
+  "$repo_root/packages/blueprint/package.json" \
+  "$repo_root/apps/builder/package.json"
+
+new=$(node -e "process.stdout.write(require('$repo_root/packages/blueprint-core/package.json').version)")
+echo "pre-commit: Blueprint bumped to $new (folded into this commit)"
+exit 0

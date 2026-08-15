@@ -15,7 +15,8 @@
     "typecheck": "turbo typecheck",
     "lint": "turbo lint",
     "dev": "turbo dev",
-    "bump": "node scripts/bump-version.mjs"
+    "bump": "node scripts/bump-version.mjs",
+    "postinstall": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
