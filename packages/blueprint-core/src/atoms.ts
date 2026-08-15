@@ -34,6 +34,61 @@ function responsive<T extends ZodTypeAny>(inner: T) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// Static-or-dynamic list props — an items/options list can be authored
+// statically (an array) OR bound to a backend data source. The dynamic
+// form references a `$prefix.path` the consumer resolves at runtime
+// (convention: `$data.<key>`), with optional design-time `sample` items
+// and static `prepend`/`append` items merged around the resolved list.
+// ─────────────────────────────────────────────────────────────────────
+
+/** `$prefix.path` reference — same syntax as visibility/access predicates. */
+const dataSourceRef = z
+  .string()
+  .regex(/^\$[a-zA-Z]+\..+/, 'must be a "$prefix.path" reference, e.g. "$data.countries"');
+
+/** The dynamic (backend-bound) branch of a list prop. */
+function boundList(item: ZodTypeAny) {
+  return z
+    .object({
+      source: dataSourceRef,
+      /** Preview-only items rendered at design time; the backend swaps in the real list. */
+      sample: z.array(item).optional(),
+      /** Static items merged before the resolved list (e.g. an "All" option). */
+      prepend: z.array(item).optional(),
+      /** Static items merged after the resolved list. */
+      append: z.array(item).optional(),
+    })
+    .strict();
+}
+
+/**
+ * A list prop: a static array of `item` OR a {@link boundList} binding.
+ * `min` (when given) applies only to the static array — the bound form
+ * has no minimum since its items arrive at runtime.
+ */
+function listProp(item: ZodTypeAny, min?: { count: number; message: string }) {
+  const staticArr = min
+    ? z.array(item).min(min.count, min.message)
+    : z.array(item);
+  return z.union([staticArr, boundList(item)]);
+}
+
+/**
+ * Runtime discriminator: is a list-prop value the dynamic (bound) form?
+ * Exported so flavor bindings and the Builder share one check.
+ */
+export function isBoundList(
+  v: unknown,
+): v is { source: string; sample?: unknown[]; prepend?: unknown[]; append?: unknown[] } {
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    !Array.isArray(v) &&
+    typeof (v as { source?: unknown }).source === 'string'
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // Per-atom prop schemas — flat strict objects, every field optional
 // unless explicitly required by the contract (e.g. heading.level)
 // ─────────────────────────────────────────────────────────────────────
@@ -255,7 +310,7 @@ const breadcrumbItem = z.object({
 }).strict();
 
 const breadcrumbsProps = z.object({
-  items: z.array(breadcrumbItem).min(1, 'breadcrumbs.items must have at least one item'),
+  items: listProp(breadcrumbItem, { count: 1, message: 'breadcrumbs.items must have at least one item' }),
   /** `0` ⇒ never collapse. */
   maxItems: z.number().int().nonnegative().optional(),
   itemsBeforeCollapse: z.number().int().nonnegative().optional(),
@@ -409,7 +464,7 @@ const selectProps = z.object({
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
   required: z.boolean().optional(),
-  options: z.array(selectOption).min(1, 'select.options must have at least one option'),
+  options: listProp(selectOption, { count: 1, message: 'select.options must have at least one option' }),
 }).strict();
 
 const dateProps = z.object({
@@ -471,7 +526,7 @@ const radioProps = z.object({
   helperText: inlineTextSchema.optional(),
   required: z.boolean().optional(),
   orientation: z.enum(['horizontal', 'vertical']).optional(),
-  options: z.array(radioOption).min(1, 'radio.options must have at least one option'),
+  options: listProp(radioOption, { count: 1, message: 'radio.options must have at least one option' }),
 }).strict();
 
 // ─── P2: date/time variants ─────────────────────────────────────────
@@ -519,7 +574,7 @@ const autocompleteProps = z.object({
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
   required: z.boolean().optional(),
-  options: z.array(autocompleteOption),
+  options: listProp(autocompleteOption),
 }).strict();
 
 const otpProps = z.object({

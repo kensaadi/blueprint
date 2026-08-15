@@ -27,7 +27,7 @@ export { accessRuleSchema } from './access';
 export type { AccessRule } from './access';
 
 // Catalog
-export { ATOM_NAMES, ATOM_PROP_SCHEMAS, ATOMS_REQUIRING_ID, isAtomName } from './atoms';
+export { ATOM_NAMES, ATOM_PROP_SCHEMAS, ATOMS_REQUIRING_ID, isAtomName, isBoundList } from './atoms';
 export type { AtomName, FieldTooltip } from './atoms';
 
 // Schema + validator
