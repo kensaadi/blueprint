@@ -73,6 +73,11 @@ function listProp(item: ZodTypeAny, min?: { count: number; message: string }) {
   return z.union([staticArr, boundList(item)]);
 }
 
+/** A list-prop value: a static array of `T` OR a backend-bound reference. */
+export type ListProp<T> =
+  | T[]
+  | { source: string; sample?: T[]; prepend?: T[]; append?: T[] };
+
 /**
  * Runtime discriminator: is a list-prop value the dynamic (bound) form?
  * Exported so flavor bindings and the Builder share one check.

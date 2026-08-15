@@ -27,7 +27,12 @@ import type {
 } from '@dashforge/blueprint-core';
 import { collectMissingIconRefs, collectMissingTranslationKeys, validate } from '@dashforge/blueprint-core';
 import { compileTree, type CompileContext } from './compileNode';
-import { IconProvider, IntlProvider } from '@dashforge/blueprint-runtime';
+import {
+  IconProvider,
+  IntlProvider,
+  DataSourceProvider,
+  type DataResolver,
+} from '@dashforge/blueprint-runtime';
 import { LIBS } from './libs';
 import { ValidationErrorCard } from './ValidationErrorCard';
 import type { NamedRuleMap } from './VisibilityGate';
@@ -44,6 +49,7 @@ const RESERVED_PROPS = new Set([
   'slots',
   'icons',
   'intl',
+  'resolveData',
   'validationMode',
   'onValidationDiagnostics',
   'children',
@@ -89,6 +95,14 @@ export type DashBlueprintProps = {
    * hydration mismatch — Blueprint does not reconcile this.
    */
   intl?: IntlConfig;
+  /**
+   * Resolver for dynamic (backend-bound) list props. A `select`/`radio`/
+   * `autocomplete`'s `options` or a `breadcrumbs`' `items` may be bound to
+   * a `$data.<key>` source instead of a static array; this maps that
+   * reference to the actual list. Unresolved references fall back to the
+   * binding's `sample` items (so design-time previews are never empty).
+   */
+  resolveData?: DataResolver;
   validationMode?: ValidationMode;
   /** Fires after every compile with the diagnostics list (errors + warnings). */
   onValidationDiagnostics?: (diagnostics: {
@@ -111,6 +125,7 @@ export function DashBlueprint(props: DashBlueprintProps): ReactNode {
     slots,
     icons = EMPTY_ICONS,
     intl,
+    resolveData,
     // Env-aware default: dev iterates with red blocks inline, prod
     // rejects fail-loud. The Builder (V2) refuses to export anything
     // that would fail strict — so Builder-shipped contracts always
@@ -260,7 +275,9 @@ export function DashBlueprint(props: DashBlueprintProps): ReactNode {
   return (
     <IntlProvider intl={intl}>
       <IconProvider registry={icons}>
-        {compileTree(validation.data.root, ctx)}
+        <DataSourceProvider resolve={resolveData}>
+          {compileTree(validation.data.root, ctx)}
+        </DataSourceProvider>
       </IconProvider>
     </IntlProvider>
   );

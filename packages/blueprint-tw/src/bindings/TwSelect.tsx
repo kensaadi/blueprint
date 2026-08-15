@@ -10,8 +10,8 @@
 
 import { useMemo } from 'react';
 import { Autocomplete } from '@dashforge/tw';
-import type { InlineText as InlineTextValue, TranslatableString } from '@dashforge/blueprint-core';
-import { InlineText, useTranslatable, resolveTranslatableValue, useIntl, useFormValuesSafe } from '@dashforge/blueprint-runtime';
+import type { InlineText as InlineTextValue, ListProp, TranslatableString } from '@dashforge/blueprint-core';
+import { InlineText, useTranslatable, resolveTranslatableValue, useIntl, useFormValuesSafe, useResolvedList } from '@dashforge/blueprint-runtime';
 import { useTwFormCtx } from '../formContext';
 
 type Option = { value: string; label: TranslatableString; disabled?: boolean };
@@ -22,7 +22,7 @@ type Props = {
   placeholder?: TranslatableString;
   helperText?: InlineTextValue;
   required?: boolean;
-  options: Option[];
+  options: ListProp<Option>;
 };
 
 export function TwSelect({ name, label, placeholder, helperText, required, options }: Props) {
@@ -30,9 +30,11 @@ export function TwSelect({ name, label, placeholder, helperText, required, optio
   const resolvedPlaceholder = useTranslatable(placeholder);
   const intl = useIntl();
   const formValues = useFormValuesSafe();
+  // Static array OR backend-bound source → plain array (sample fallback).
+  const items = useResolvedList(options);
   const resolvedOptions = useMemo(
-    () => options.map((o) => ({ ...o, label: resolveTranslatableValue(o.label, intl, formValues) ?? '' })),
-    [options, intl, formValues],
+    () => items.map((o) => ({ ...o, label: resolveTranslatableValue(o.label, intl, formValues) ?? '' })),
+    [items, intl, formValues],
   );
   const inForm = useTwFormCtx() !== null;
   if (!name) {

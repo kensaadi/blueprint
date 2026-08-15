@@ -59,6 +59,7 @@ const EXPECTED_CORE_VALUE_EXPORTS = [
   'inlineTextRunSchema',
   'inlineTextSchema',
   'isAtomName',
+  'isBoundList',
   'isSafeHref',
   'isTranslationRef',
   'linkHrefSchema',

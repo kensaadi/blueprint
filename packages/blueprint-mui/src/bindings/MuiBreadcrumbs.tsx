@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Breadcrumbs, Link, Typography } from '@mui/material';
-import { useIconRegistry, renderIcon, useTranslatable, resolveTranslatableValue, useIntl, useFormValuesSafe } from '@dashforge/blueprint-runtime';
-import type { IconRegistry, TranslatableString } from '@dashforge/blueprint-core';
+import { useIconRegistry, renderIcon, useTranslatable, resolveTranslatableValue, useIntl, useFormValuesSafe, useResolvedList } from '@dashforge/blueprint-runtime';
+import type { IconRegistry, ListProp, TranslatableString } from '@dashforge/blueprint-core';
 
 type Item = {
   id: string;
@@ -13,7 +13,7 @@ type Item = {
 };
 
 type Props = {
-  items: Item[];
+  items: ListProp<Item>;
   maxItems?: number;
   itemsBeforeCollapse?: number;
   itemsAfterCollapse?: number;
@@ -35,13 +35,14 @@ export function MuiBreadcrumbs({
   const intl = useIntl();
   const formValues = useFormValuesSafe();
   const resolvedAriaLabel = useTranslatable(ariaLabel) ?? 'breadcrumb';
+  const list = useResolvedList(items);
   const resolvedItems = useMemo(
     () =>
-      items.map((item) => ({
+      list.map((item) => ({
         ...item,
         label: resolveTranslatableValue(item.label, intl, formValues) ?? '',
       })),
-    [items, intl, formValues],
+    [list, intl, formValues],
   );
 
   return (

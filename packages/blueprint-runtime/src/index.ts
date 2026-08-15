@@ -45,3 +45,8 @@ export type { ResolvedFieldTooltip } from './useFieldTooltip';
 // ─── Form-values context: publisher (mounted by the flavor form adapter)
 // and the safe reader (used by InlineText + advanced custom nodes). ───
 export { FormValuesPublisher, useFormValuesSafe } from './FormValuesContext';
+
+// ─── Data-source context: resolves static|dynamic list props (bound
+// select/radio/autocomplete options, breadcrumbs items) to arrays. ───
+export { DataSourceProvider, useResolvedList } from './DataSourceContext';
+export type { DataResolver } from './DataSourceContext';

@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { RadioGroup } from '@dashforge/tw';
-import type { InlineText as InlineTextValue, TranslatableString } from '@dashforge/blueprint-core';
-import { InlineText, useTranslatable, resolveTranslatableValue, useIntl, useFormValuesSafe } from '@dashforge/blueprint-runtime';
+import type { InlineText as InlineTextValue, ListProp, TranslatableString } from '@dashforge/blueprint-core';
+import { InlineText, useTranslatable, resolveTranslatableValue, useIntl, useFormValuesSafe, useResolvedList } from '@dashforge/blueprint-runtime';
 import { useTwFormCtx } from '../formContext';
 
 type Option = { value: string; label: TranslatableString; disabled?: boolean };
@@ -14,16 +14,17 @@ type Props = {
   helperText?: InlineTextValue;
   required?: boolean;
   orientation?: 'horizontal' | 'vertical';
-  options: Option[];
+  options: ListProp<Option>;
 };
 
 export function TwRadio({ name, label, helperText, required, orientation, options }: Props) {
   const resolvedLabel = useTranslatable(label);
   const intl = useIntl();
   const formValues = useFormValuesSafe();
+  const items = useResolvedList(options);
   const resolvedOptions = useMemo(
-    () => options.map((o) => ({ ...o, label: resolveTranslatableValue(o.label, intl, formValues) ?? '' })),
-    [options, intl, formValues],
+    () => items.map((o) => ({ ...o, label: resolveTranslatableValue(o.label, intl, formValues) ?? '' })),
+    [items, intl, formValues],
   );
   const inForm = useTwFormCtx() !== null;
   if (!name) {
