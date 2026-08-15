@@ -13,6 +13,7 @@ import type { PropField } from './schemaAdapter';
 import { FieldHint } from './FieldHint';
 import { hintFor, placeholderFor } from './fieldHints';
 import { IconPicker } from './IconPicker';
+import { TooltipEditor } from './TooltipEditor';
 import {
   TranslatableStringEditor,
   TRANSLATABLE_KEYS,
@@ -119,6 +120,14 @@ function renderInput(
         onChange={onChange}
         placeholder={placeholder}
       />
+    );
+  }
+  // `tooltip` (label-help) is a `string | { content, icon?, position?,
+  // side? }` union the adapter collapses to `kind: 'string'`. Intercept
+  // it by key and mount the dedicated compound editor.
+  if (field.key === 'tooltip') {
+    return (
+      <TooltipEditor value={value} onChange={onChange} placeholder={placeholder} />
     );
   }
   switch (field.kind) {
