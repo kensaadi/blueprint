@@ -13,6 +13,7 @@ import type { PropField } from './schemaAdapter';
 import { FieldHint } from './FieldHint';
 import { hintFor, placeholderFor } from './fieldHints';
 import { IconPicker } from './IconPicker';
+import { ItemsEditor } from './ItemsEditor';
 import { TooltipEditor } from './TooltipEditor';
 import {
   TranslatableStringEditor,
@@ -235,6 +236,9 @@ function renderInput(
           onChange={onChange}
         />
       );
+
+    case 'array':
+      return <ItemsEditor field={field} value={value} onChange={onChange} />;
 
     case 'json':
     default: {

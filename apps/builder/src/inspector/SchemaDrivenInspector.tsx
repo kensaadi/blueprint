@@ -21,7 +21,7 @@ export function SchemaDrivenInspector({ node }: { node: BlueprintNode }) {
     return <UnknownAtomFallback node={node} />;
   }
 
-  const fields = fieldsForAtom(node.type);
+  const fields = fieldsForAtom(node.type, node.props);
   if (!fields || fields.length === 0) {
     return (
       <Typography

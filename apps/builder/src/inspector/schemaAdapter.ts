@@ -25,6 +25,7 @@ export type PropKind =
   | 'boolean'
   | 'enum'
   | 'responsive'
+  | 'array'
   | 'json';
 
 export type PropField = {
@@ -49,6 +50,18 @@ export type PropField = {
    * kind.
    */
   responsiveKind?: 'number' | 'string';
+  /**
+   * For `kind === 'array'`, the fields of each item object — so the
+   * editor can render one row of sub-inputs per array entry.
+   */
+  itemFields?: PropField[];
+  /**
+   * For `kind === 'array'`, whether the prop also accepts a dynamic
+   * backend binding ({ source, sample, prepend, append }) — true for
+   * select/radio/autocomplete options + breadcrumbs items (the listProp
+   * union), false for tabs/accordion items (static arrays only).
+   */
+  bindable?: boolean;
   /** Human-readable hint for the input, when the schema exposes one. */
   description?: string;
 };
@@ -79,6 +92,28 @@ function detectResponsive(options: unknown[]): 'number' | 'string' | null {
     if (otherDef.type === 'string') return 'string';
   }
   return null;
+}
+
+/**
+ * Detect the listProp union — `union([ array(item), object({ source, … }) ])`.
+ * Returns the item object's fields when matched (so the editor can render
+ * rows), or `null` for any other union.
+ */
+function detectBoundList(
+  options: unknown[] | undefined,
+): { itemFields?: PropField[] } | null {
+  if (!options || options.length !== 2) return null;
+  const arr = options.find((o) => defOf(o)?.type === 'array');
+  const obj = options.find((o) => defOf(o)?.type === 'object');
+  if (!arr || !obj) return null;
+  const objShape = defOf(obj)?.shape as Record<string, unknown> | undefined;
+  if (!objShape || !('source' in objShape)) return null;
+  const elDef = defOf((defOf(arr) as { element?: unknown } | null)?.element);
+  const itemFields =
+    elDef?.type === 'object' && elDef.shape
+      ? fieldsFromShape(elDef.shape as Record<string, unknown>)
+      : undefined;
+  return { itemFields };
 }
 
 /** Internal opaque handle for a zod schema. */
@@ -112,12 +147,16 @@ function unwrap(schema: unknown): { inner: unknown; optional: boolean } {
   return { inner: cur, optional };
 }
 
-function kindFor(schema: unknown): {
+type KindInfo = {
   kind: PropKind;
   options?: string[];
   enumValueType?: 'string' | 'number';
   responsiveKind?: 'number' | 'string';
-} {
+  itemFields?: PropField[];
+  bindable?: boolean;
+};
+
+function kindFor(schema: unknown): KindInfo {
   const def = defOf(schema);
   if (!def) return { kind: 'json' };
   switch (def.type) {
@@ -127,6 +166,29 @@ function kindFor(schema: unknown): {
       return { kind: 'number' };
     case 'boolean':
       return { kind: 'boolean' };
+    case 'literal': {
+      // A fixed value (e.g. a discriminator branch) — render as a locked
+      // single-option select. fieldsForAtom widens the discriminator to
+      // the full value set for discriminated-union atoms.
+      const vals =
+        (def.values as unknown[] | undefined) ??
+        [(def as { value?: unknown }).value];
+      const v = vals[0];
+      return {
+        kind: 'enum',
+        options: vals.map(String),
+        enumValueType: typeof v === 'number' ? 'number' : 'string',
+      };
+    }
+    case 'array': {
+      // Array of objects → row editor over the element's fields.
+      const elDef = defOf(def.element);
+      const itemFields =
+        elDef?.type === 'object' && elDef.shape
+          ? fieldsFromShape(elDef.shape as Record<string, unknown>)
+          : undefined;
+      return { kind: 'array', itemFields };
+    }
     case 'enum': {
       // `entries` is a record whose keys/values are the enum members.
       // Native `z.enum(...)` members are always strings.
@@ -135,6 +197,10 @@ function kindFor(schema: unknown): {
       return { kind: 'enum', options, enumValueType: 'string' };
     }
     case 'union': {
+      // listProp: union([ array(item), object({ source, sample?, … }) ])
+      // → the static-or-dynamic list editor (bindable array).
+      const bound = detectBoundList(def.options as unknown[] | undefined);
+      if (bound) return { kind: 'array', bindable: true, itemFields: bound.itemFields };
       // Unions cover four patterns worth surfacing:
       //   1. `responsive(inner)` = `union([inner, object({base…xl})])`
       //      → dedicated responsive editor (Single / per-breakpoint).
@@ -186,33 +252,89 @@ function kindFor(schema: unknown): {
   }
 }
 
-/**
- * Introspect an atom's zod schema and return its top-level fields.
- * Returns `null` for atoms whose schema is not a `z.object(...)`.
- */
-export function fieldsForAtom(type: string): PropField[] | null {
-  if (!(type in ATOM_PROP_SCHEMAS)) return null;
-  const schema = (ATOM_PROP_SCHEMAS as Record<string, unknown>)[type];
-  const def = defOf(schema);
-  if (!def || def.type !== 'object') return null;
-  const shape = def.shape as Record<string, unknown> | undefined;
-  if (!shape) return null;
+/** Turn a zod object `shape` into the flat PropField list. */
+function fieldsFromShape(shape: Record<string, unknown>): PropField[] {
   const out: PropField[] = [];
   for (const [key, field] of Object.entries(shape)) {
     const { inner, optional } = unwrap(field);
-    const { kind, options, enumValueType, responsiveKind } = kindFor(inner);
+    const info = kindFor(inner);
     const desc = (defOf(inner)?.description as string | undefined) ?? undefined;
-    out.push({
-      key,
-      kind,
-      optional,
-      options,
-      enumValueType,
-      responsiveKind,
-      description: desc,
-    });
+    out.push({ key, optional, description: desc, ...info });
   }
   return out;
+}
+
+/** Read the single literal value of a `z.literal(...)` schema. */
+function literalValueOf(schema: unknown): unknown {
+  const def = defOf(schema);
+  if (!def) return undefined;
+  return (
+    (def.values as unknown[] | undefined)?.[0] ??
+    (def as { value?: unknown }).value
+  );
+}
+
+/**
+ * Introspect an atom's zod schema and return its top-level fields.
+ *
+ * Handles both `z.object(...)` atoms and `z.discriminatedUnion(...)` atoms
+ * (accordion): for the latter, the variant is chosen by the current
+ * discriminator value in `props`, and the discriminator field is widened
+ * to an enum of every variant's literal so the user can switch modes.
+ * Returns `null` for anything else.
+ */
+export function fieldsForAtom(
+  type: string,
+  props?: Record<string, unknown>,
+): PropField[] | null {
+  if (!(type in ATOM_PROP_SCHEMAS)) return null;
+  const schema = (ATOM_PROP_SCHEMAS as Record<string, unknown>)[type];
+  const def = defOf(schema);
+  if (!def) return null;
+
+  if (def.type === 'object') {
+    const shape = def.shape as Record<string, unknown> | undefined;
+    return shape ? fieldsFromShape(shape) : null;
+  }
+
+  // Discriminated union (accordion): pick the variant by the current
+  // discriminator, then expose the discriminator as a switchable enum.
+  if (def.type === 'union' && Array.isArray(def.options)) {
+    const variants = def.options as unknown[];
+    const disc = def.discriminator as string | undefined;
+    let chosen = variants[0];
+    if (disc && props?.[disc] !== undefined) {
+      const match = variants.find((v) => {
+        const vShape = defOf(v)?.shape as Record<string, unknown> | undefined;
+        return vShape && literalValueOf(vShape[disc]) === props[disc];
+      });
+      if (match) chosen = match;
+    }
+    const chosenShape = defOf(chosen)?.shape as Record<string, unknown> | undefined;
+    if (!chosenShape) return null;
+    const fields = fieldsFromShape(chosenShape);
+    if (disc) {
+      const values = variants
+        .map((v) => {
+          const vShape = defOf(v)?.shape as Record<string, unknown> | undefined;
+          return vShape ? literalValueOf(vShape[disc]) : undefined;
+        })
+        .filter((v): v is string | number => v !== undefined);
+      const idx = fields.findIndex((f) => f.key === disc);
+      if (idx >= 0) {
+        fields[idx] = {
+          ...fields[idx],
+          kind: 'enum',
+          options: values.map(String),
+          enumValueType: 'string',
+          optional: false,
+        };
+      }
+    }
+    return fields;
+  }
+
+  return null;
 }
 
 /** Convenience narrowing helper — `type` is a catalog atom name. */

@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Blueprint — declarative UI contract runtime. Interprets a JSON contract into React, dispatching to the tw or mui flavor via the `lib` prop.",
   "license": "AGPL-3.0-only",
   "type": "module",
