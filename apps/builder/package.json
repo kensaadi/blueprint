@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/builder",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "private": true,
   "type": "module",
   "description": "Blueprint Builder — the self-hosted visual editor for Blueprint contracts.",

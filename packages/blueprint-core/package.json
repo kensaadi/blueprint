@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint-core",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "Blueprint contract core — zod schemas, validator, and types. No React, no design system.",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -8,24 +8,27 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./spec/contract-v1.schema.json": "./spec/contract-v1.schema.json"
   },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "spec"
   ],
   "sideEffects": false,
   "scripts": {
     "build": "tsup",
+    "gen:spec": "tsx scripts/gen-json-schema.mts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src"
   },
   "dependencies": {
-    "zod": "^4.4.3",
-    "@dashforge/rbac": "^1.0.0"
+    "@dashforge/rbac": "^1.0.0",
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "react": ">=19"
@@ -37,8 +40,10 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.14",
+    "ajv": "^8.20.0",
     "react": "^19.2.6",
     "tsup": "^8.0.0",
+    "tsx": "^4.23.12",
     "typescript": "~6.0.2",
     "vitest": "^4.1.9"
   }
