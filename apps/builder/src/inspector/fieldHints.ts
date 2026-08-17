@@ -73,6 +73,10 @@ const AXIS_HINTS: Record<string, string> = {
     "How many rows tall the textarea appears initially. Users can still type more; the box scrolls.",
   maxLength:
     "The maximum number of characters the user can type. Example: 50 for a short name field.",
+  minLength:
+    "The minimum number of characters required. Example: 8 for a password.",
+  pattern:
+    "A regular expression the value must match — JS regex, no slashes. Example: ^[A-Z]{2}\\d{4}$ for a code like 'AB1234'. The error message comes from the runtime, not the contract.",
   orientation:
     "Arrange the radio options in a row (horizontal) or in a column (vertical).",
   options:

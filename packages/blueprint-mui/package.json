@@ -1,6 +1,6 @@
 {
   "name": "@dashforge/blueprint-mui",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "description": "Blueprint MUI flavor pack — atom bindings that render the contract with @mui/material + @dashforge/ui components.",
   "license": "AGPL-3.0-only",
   "type": "module",

@@ -455,6 +455,19 @@ const fieldProps = z.object({
   tooltip: fieldTooltipSchema.optional(),
   type: z.string().optional(),
   required: z.boolean().optional(),
+  /**
+   * Minimum number of characters. Declarative field-level constraint the
+   * runtime form (RHF) enforces; the error message is produced at runtime,
+   * never in the contract.
+   */
+  minLength: z.number().int().positive().optional(),
+  /** Maximum number of characters. Enforced by the runtime form. */
+  maxLength: z.number().int().positive().optional(),
+  /**
+   * Regex the value must match — a JS regex source string, no delimiters
+   * (e.g. `^[A-Z]{2}\\d{4}$`). Enforced by the runtime form.
+   */
+  pattern: z.string().optional(),
 }).strict();
 
 const selectOption = z.object({
