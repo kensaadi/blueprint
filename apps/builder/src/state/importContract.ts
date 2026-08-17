@@ -32,6 +32,9 @@ export type ImportResult =
  */
 function ensureIds(node: BlueprintNode): BlueprintNode {
   const withId: BlueprintNode = { ...node, _uid: node._uid || uid() };
+  // Drop the legacy envelope `slots` field — it was never consumed by the
+  // runtime and is no longer in the contract schema.
+  delete (withId as Record<string, unknown>).slots;
   if (Array.isArray(withId.children)) {
     withId.children = withId.children.map(ensureIds);
   } else {
@@ -41,6 +44,23 @@ function ensureIds(node: BlueprintNode): BlueprintNode {
     withId.props = {};
   }
   return withId;
+}
+
+/**
+ * Recursively remove the legacy `slots` envelope key so an older exported
+ * contract (authored before it was dropped) still validates on import.
+ */
+function stripLegacySlots(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stripLegacySlots);
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      if (k === 'slots') continue;
+      out[k] = stripLegacySlots(v);
+    }
+    return out;
+  }
+  return value;
 }
 
 /**
@@ -77,7 +97,9 @@ export function parseContract(source: string): ImportResult {
     };
   }
 
-  const result = validate(parsed, { mode: 'strict' });
+  // Strip the legacy `slots` envelope before validation — old exported
+  // contracts may still carry it; the current schema would reject it.
+  const result = validate(stripLegacySlots(parsed), { mode: 'strict' });
   if (!result.ok) {
     return {
       ok: false,

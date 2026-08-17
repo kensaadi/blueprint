@@ -53,7 +53,9 @@ export function normaliseNode(n: unknown): BlueprintNode | null {
     children: kids
       .map(normaliseNode)
       .filter((c): c is BlueprintNode => c !== null),
-    slots: (anyN.slots as Record<string, unknown>) ?? undefined,
+    // Legacy `slots` (envelope) is dropped on load — the field was never
+    // consumed by the runtime; extensibility is the mount-time slot
+    // override (`<DashBlueprint slots={{ nodeId: … }}>`).
     visibility: anyN.visibility as BlueprintNode['visibility'] ?? undefined,
     disabled: typeof anyN.disabled === 'boolean' ? anyN.disabled : undefined,
     access: (anyN.access as BlueprintNode['access']) ?? undefined,

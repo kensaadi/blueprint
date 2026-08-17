@@ -35,8 +35,6 @@ const AXIS_HINTS: Record<string, string> = {
     "If checked, users cannot interact with this element — it's greyed out and read-only. Leave unchecked for normal behaviour.",
   access:
     "Show or hide this element based on the current user's permissions. For example, only users with the 'admin' role can see a 'Delete' button. Choose a resource, an action, and what happens when access is denied.",
-  slots:
-    "Replace a named inner area of this element with custom content. For example, a card has a 'header' slot you can override with a special banner. Most elements don't need this — leave empty unless you know you need it.",
   'access.resource':
     "Which data or feature this element refers to. Examples: 'invoices', 'customers', 'admin-panel'. Your app maps these names to permissions.",
   'access.action':
@@ -207,18 +205,4 @@ export const JSON_EXAMPLES = {
 }
 
 Combine with and / or / not for complex conditions.`,
-
-  slots: `Example — replace the card header with a custom banner:
-
-{
-  "header": {
-    "type": "alert",
-    "props": {
-      "severity": "info",
-      "title": "Premium plan"
-    }
-  }
-}
-
-Available slot names depend on the atom type. Leave empty if you don't need to customise inner areas.`,
 } as const;

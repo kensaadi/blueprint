@@ -62,13 +62,13 @@ export type BuilderAction =
   // Set / clear the layoutHint envelope. Value `undefined` removes it
   // entirely so the JSON export stays clean.
   | { type: 'setLayoutHint'; id: string; value: unknown }
-  // Patch one of the three state axes (visibility / disabled / access)
-  // or the `slots` map on a node. Setting the value to `undefined`
-  // deletes the axis so it doesn't ship in the exported JSON.
+  // Patch one of the three state axes (visibility / disabled / access) on
+  // a node. Setting the value to `undefined` deletes the axis so it
+  // doesn't ship in the exported JSON.
   | {
       type: 'setNodeAxis';
       id: string;
-      axis: 'visibility' | 'disabled' | 'access' | 'slots';
+      axis: 'visibility' | 'disabled' | 'access';
       value: unknown;
     }
   | { type: 'removeNode'; id: string }

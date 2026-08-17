@@ -1,21 +1,19 @@
 /**
- * State axes editor — surfaces the three Blueprint envelope-level
- * axes (Decision #17) plus the envelope `id` and the `slots` map.
+ * State axes editor — surfaces the Blueprint envelope-level fields
+ * (Decision #17) plus the public `nodeId`.
  *
- * Axes rendered:
- *   - Node id       — user-facing identifier for `<DashBlueprint forms>`
- *     and `slots` lookup; especially important on `form` where the
- *     validator REQUIRES `node.id` (ATOMS_REQUIRING_ID).
+ * Fields rendered:
+ *   - nodeId        — public addressing key for `<DashBlueprint forms>`
+ *     and slot overrides (`<DashBlueprint slots={{ nodeId: … }}>`);
+ *     required on `form` (ATOMS_REQUIRING_ID).
  *   - Visibility    — 3-way (default / hidden / rule). Rule mode uses a
- *     JSON textarea until a click-to-build rule editor lands (Phase 3d).
+ *     JSON textarea for and/or/not composites until a click-to-build
+ *     rule editor lands (Phase 3d).
  *   - Disabled      — static structural disable (boolean).
  *   - Access        — RBAC requirement (resource + action + fallback).
- *   - Slots         — JSON textarea for slot overrides. Deferred: same
- *     rationale as visibility rules.
  *
- * Fine-grained rule builders and slot pickers land in Phase 3d.
- * Today's editors are functional; the JSON textarea gives designers a
- * working escape hatch even before the visual builders exist.
+ * Extensibility is the mount-time slot override (a custom component per
+ * nodeId), not an envelope field — so there is no `node.slots` editor.
  */
 import { useState } from 'react';
 import { Typography } from '@dashforge/tw';
@@ -45,7 +43,6 @@ export function StateAxesEditor({ node }: Props) {
       <VisibilityField node={node} />
       <DisabledField node={node} />
       <AccessField node={node} />
-      <SlotsField node={node} />
     </div>
   );
 }
@@ -302,248 +299,6 @@ function AccessField({ node }: Props) {
             </select>
           </label>
         </div>
-      )}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────
-// Slots — Record<slotName, BlueprintNode | BlueprintNode[]>
-//
-// The visual builder only handles the SIMPLE shape (each value is a
-// single non-array BlueprintNode with no children / nested slots) —
-// that covers 90%+ of real-world usage (a customFooter, a
-// customEmptyState, a customHeader…). Anything more elaborate (array
-// values, deep nesting) transparently falls back to the JSON editor
-// so power users are never blocked.
-// ─────────────────────────────────────────────────────────────────
-
-type SimpleOverride = { type: string; id: string };
-
-function isSimpleShape(v: unknown): v is Record<string, SimpleOverride> {
-  if (v === undefined || v === null) return true;
-  if (typeof v !== 'object' || Array.isArray(v)) return false;
-  return Object.values(v as Record<string, unknown>).every((entry) => {
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return false;
-    const e = entry as Record<string, unknown>;
-    // Reject if it looks like a deep tree — children with content, or
-    // nested slots. `props` can be present but must be a plain object
-    // with no nested BlueprintNode structure worth surfacing.
-    const children = e.children;
-    const hasChildren =
-      Array.isArray(children) && (children as unknown[]).length > 0;
-    if (hasChildren) return false;
-    if (e.slots !== undefined) return false;
-    return typeof e.type === 'string' && typeof e.id === 'string';
-  });
-}
-
-function SlotsField({ node }: Props) {
-  const dispatch = useBuilderDispatch();
-  const [mode, setMode] = useState<'visual' | 'json'>(() =>
-    isSimpleShape(node.slots) ? 'visual' : 'json',
-  );
-  const setSlots = (v: unknown) =>
-    dispatch({ type: 'setNodeAxis', id: node._uid, axis: 'slots', value: v });
-
-  // If the current value shape is incompatible with the visual editor,
-  // pin the mode to `json` and disable the toggle — safer than showing
-  // an editor that would silently drop data.
-  const canVisual = isSimpleShape(node.slots);
-  const effectiveMode: 'visual' | 'json' = canVisual ? mode : 'json';
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <span className={labelClass} style={{ color: 'var(--bd-text-soft)' }}>
-          Custom content areas
-          <FieldHint text={hintFor('slots')} />
-        </span>
-        <div className="flex items-center gap-1">
-          <ModeChip
-            active={effectiveMode === 'visual'}
-            onClick={() => canVisual && setMode('visual')}
-          >
-            Visual
-          </ModeChip>
-          <ModeChip active={effectiveMode === 'json'} onClick={() => setMode('json')}>
-            JSON
-          </ModeChip>
-        </div>
-      </div>
-
-      {effectiveMode === 'visual' ? (
-        <SlotsVisualBuilder
-          value={(node.slots as Record<string, SimpleOverride> | undefined) ?? undefined}
-          onChange={setSlots}
-        />
-      ) : (
-        <>
-          {!canVisual && (
-            <span className="text-[11px]" style={{ color: 'var(--bd-text-faint)' }}>
-              Slots have an advanced shape (array values or nested tree) —
-              editing as JSON.
-            </span>
-          )}
-          <JsonEditor
-            label=""
-            hintKey="slots"
-            placeholder={JSON_EXAMPLES.slots}
-            value={node.slots}
-            onChange={setSlots}
-          />
-        </>
-      )}
-    </div>
-  );
-}
-
-function SlotsVisualBuilder({
-  value,
-  onChange,
-}: {
-  value: Record<string, SimpleOverride> | undefined;
-  onChange: (v: unknown) => void;
-}) {
-  const entries = value ? Object.entries(value) : [];
-  const [draft, setDraft] = useState<{ key: string; type: string; id: string } | null>(
-    null,
-  );
-
-  const remove = (key: string) => {
-    if (!value) return;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { [key]: _, ...rest } = value;
-    onChange(Object.keys(rest).length === 0 ? undefined : rest);
-  };
-
-  const commit = () => {
-    if (!draft) return;
-    const key = draft.key.trim();
-    const type = draft.type.trim();
-    const id = draft.id.trim() || `${type}-${Math.random().toString(36).slice(2, 8)}`;
-    if (!key || !type) return;
-    onChange({
-      ...(value ?? {}),
-      [key]: { type, id, props: {}, children: [] },
-    });
-    setDraft(null);
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      {entries.length === 0 && !draft && (
-        <span className="text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
-          No slots defined yet.
-        </span>
-      )}
-      {entries.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          {entries.map(([key, entry]) => (
-            <div
-              key={key}
-              className="flex items-center gap-2 rounded-md border px-2.5 py-1.5"
-              style={{
-                borderColor: 'var(--bd-border)',
-                background: 'var(--bd-item)',
-              }}
-            >
-              <span
-                className="font-mono text-[12px]"
-                style={{ color: 'var(--bd-text)' }}
-              >
-                {key}
-              </span>
-              <span style={{ color: 'var(--bd-text-faint)' }}>→</span>
-              <span
-                className="font-mono text-[12px]"
-                style={{ color: 'var(--bd-accent)' }}
-              >
-                {entry.type}
-              </span>
-              <span
-                className="ml-auto font-mono text-[11px]"
-                style={{ color: 'var(--bd-text-faint)' }}
-              >
-                #{entry.id}
-              </span>
-              <button
-                type="button"
-                onClick={() => remove(key)}
-                className="rounded p-1"
-                style={{ color: 'var(--bd-text-faint)' }}
-                aria-label={`Remove slot ${key}`}
-              >
-                <i className="ti ti-x text-[13px]" aria-hidden />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {draft ? (
-        <div
-          className="flex flex-col gap-2 rounded-md border p-2.5"
-          style={{ borderColor: 'var(--bd-border)', background: 'var(--bd-item)' }}
-        >
-          {/*
-            Two related fields (slot key + component type) share a
-            side-by-side 6/6 row so the eye reads them as a pair
-            ("this slot key binds to this component type"). The Id
-            drops to a full-width row underneath because it's optional
-            and mechanically less related — the slot is defined by the
-            first pair; the id is an implementation detail.
-          */}
-          <div className="grid grid-cols-2 gap-2">
-            <MiniInput
-              label="Slot key"
-              value={draft.key}
-              onChange={(v) => setDraft({ ...draft, key: v })}
-              placeholder="footer"
-            />
-            <MiniInput
-              label="Component type"
-              value={draft.type}
-              onChange={(v) => setDraft({ ...draft, type: v })}
-              placeholder="customFooter"
-            />
-          </div>
-          <MiniInput
-            label="Id (optional)"
-            value={draft.id}
-            onChange={(v) => setDraft({ ...draft, id: v })}
-            placeholder="auto"
-          />
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setDraft(null)}
-              className="rounded-md px-2.5 py-1 text-[12px]"
-              style={{ color: 'var(--bd-text-soft)' }}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={commit}
-              disabled={!draft.key.trim() || !draft.type.trim()}
-              className="rounded-md px-2.5 py-1 text-[12px] font-medium disabled:opacity-40"
-              style={{ background: 'var(--bd-accent)', color: 'white' }}
-            >
-              Add
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => setDraft({ key: '', type: '', id: '' })}
-          className="self-start rounded-md border border-dashed px-2.5 py-1.5 text-[12px]"
-          style={{ borderColor: 'var(--bd-border-strong)', color: 'var(--bd-text-soft)' }}
-        >
-          <i className="ti ti-plus mr-1 text-[13px]" aria-hidden />
-          Add slot
-        </button>
       )}
     </div>
   );

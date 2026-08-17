@@ -29,7 +29,6 @@ export type BlueprintNode = {
   type: string;
   props?: Record<string, unknown>;
   children?: BlueprintNode[];
-  slots?: Record<string, BlueprintNode | BlueprintNode[]>;
   /**
    * Hybrid visibility — `boolean` (STATIC structural) or `VisibilityRule`
    * (DYNAMIC predicate). `false` always hides; `true` or absent always

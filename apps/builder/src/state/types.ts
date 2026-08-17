@@ -49,13 +49,6 @@ export type BlueprintNode = {
   props: Record<string, unknown>;
   children: BlueprintNode[];
   /**
-   * Slot overrides — atom-defined named slots mapped to override
-   * nodes. `slots={}` is the canonical escape hatch (Decision #16).
-   * Opaque here; the Inspector defers to a JSON textarea until the
-   * builder gains a slot picker (Phase 3d).
-   */
-  slots?: Record<string, unknown>;
-  /**
    * Static (`boolean`) or dynamic (`VisibilityRule`) presence
    * declaration. `false` hides the node; a rule predicate is evaluated
    * against `$form.*` state at render time. Absence means "always

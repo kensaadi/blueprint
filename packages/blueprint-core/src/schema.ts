@@ -24,7 +24,6 @@ export const nodeSchema: z.ZodType<unknown> = z.lazy(() => z.object({
   type: z.string().min(1, 'node.type must be a non-empty string'),
   props: z.record(z.string(), z.unknown()).optional(),
   children: z.array(nodeSchema).optional(),
-  slots: z.record(z.string(), z.union([nodeSchema, z.array(nodeSchema)])).optional(),
   /**
    * Hybrid: `boolean` (static structural) | `VisibilityRule` (dynamic
    * predicate). See blueprint-core/visibility.ts.
