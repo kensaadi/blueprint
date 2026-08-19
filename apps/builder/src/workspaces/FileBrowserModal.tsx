@@ -23,8 +23,6 @@ import { listWorkspaces } from './registry';
 import { fuzzyScore, highlightRuns } from '../commands/fuzzy';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { useConfirm, usePrompt } from '../primitives/DialogFlow';
-import { useFeature } from '../licensing/LicenseContext';
-import { PRICING_URL } from '../licensing/pricing';
 
 type FileWithWorkspace = FileEntry & {
   workspaceId: WorkspaceId;
@@ -60,7 +58,6 @@ export function FileBrowserModal({
   useFocusTrap(modalRootRef, open);
   const promptDialog = usePrompt();
   const confirmDialog = useConfirm();
-  const hasRemoteStorage = useFeature('remote-storage');
 
   // Reload the workspace listing every time the modal opens so a Save
   // As from another surface reflects immediately on the next reopen.
@@ -224,8 +221,6 @@ export function FileBrowserModal({
             setCursor(0);
           }}
           counts={workspaceCounts(files)}
-          lockedRemote={!hasRemoteStorage}
-          onUpgrade={() => window.open(PRICING_URL, '_blank', 'noreferrer')}
         />
 
         {/* Rows */}
@@ -435,19 +430,14 @@ function WorkspaceChips({
   active,
   onChange,
   counts,
-  lockedRemote,
-  onUpgrade,
 }: {
   workspaces: import('./types').WorkspaceAdapter[];
   active: WorkspaceId | null;
   onChange: (id: WorkspaceId | null) => void;
   counts: Record<WorkspaceId, number>;
-  /** Show a locked "Remote · Pro" chip advertising the paid backend. */
-  lockedRemote?: boolean;
-  onUpgrade?: () => void;
 }) {
-  // Show the row when there's a choice OR a locked upsell to surface.
-  if (workspaces.length < 2 && !lockedRemote) return null;
+  // Show the row only when there's an actual choice of workspace.
+  if (workspaces.length < 2) return null;
   return (
     <div
       className="flex items-center gap-1.5 border-b px-3 py-2 overflow-x-auto"
@@ -469,24 +459,6 @@ function WorkspaceChips({
           count={counts[ws.descriptor.id]}
         />
       ))}
-      {lockedRemote && (
-        <button
-          type="button"
-          onClick={onUpgrade}
-          title="Upgrade to Pro for remote workspaces + version history"
-          className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-dashed px-2 py-1 text-[12px] transition-colors hover:opacity-90"
-          style={{ borderColor: 'var(--bd-border-strong)', color: 'var(--bd-text-faint)' }}
-        >
-          <i className="ti ti-lock text-[13px]" aria-hidden />
-          <span>Remote</span>
-          <span
-            className="rounded px-1 py-0.5 text-[10px] font-medium"
-            style={{ background: 'var(--bd-accent-bg)', color: 'var(--bd-accent)' }}
-          >
-            Pro
-          </span>
-        </button>
-      )}
     </div>
   );
 }

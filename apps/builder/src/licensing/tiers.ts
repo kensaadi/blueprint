@@ -31,7 +31,9 @@ export type TierMeta = {
   note?: string;
 };
 
-const PRO_FEATURES: FeatureFlag[] = ['remote-storage', 'versioning'];
+// Basic server-side storage is free (Model A) — not a Pro perk. Pro starts
+// at versioning; the paid ladder builds from there.
+const PRO_FEATURES: FeatureFlag[] = ['versioning'];
 const TEAM_FEATURES: FeatureFlag[] = [
   ...PRO_FEATURES,
   'shared-workspaces',
