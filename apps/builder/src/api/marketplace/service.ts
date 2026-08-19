@@ -25,11 +25,25 @@ export async function getTemplate(
   return attempt(provider.getTemplate(id, receipt));
 }
 
+/**
+ * Start a one-shot template checkout. `returnUrl` defaults to THIS Builder's
+ * own origin, so after payment Stripe brings the buyer back here with
+ * `?checkout=success&session_id=…` and CheckoutReturn grants (and opens) the
+ * purchased template. Critical for the self-hosted bundle, where every
+ * customer's Builder lives at a different URL — without it Stripe would
+ * redirect to Foundry (API-only → 404).
+ */
 export async function createCheckoutSession(
   templateId: string,
+  returnUrl: string = defaultReturnUrl(),
 ): Promise<Result<CheckoutSession>> {
   const provider = await marketplaceProvider();
-  return attempt(provider.createCheckoutSession(templateId));
+  return attempt(provider.createCheckoutSession(templateId, returnUrl));
+}
+
+function defaultReturnUrl(): string {
+  if (typeof window === 'undefined') return '';
+  return window.location.origin + window.location.pathname;
 }
 
 export async function getReceiptBySession(

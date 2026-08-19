@@ -72,10 +72,11 @@ async function getTemplate(id: string): Promise<MarketplaceTemplate> {
 
 async function createCheckoutSession(
   templateId: string,
+  returnUrl?: string,
 ): Promise<CheckoutSession> {
   const { data } = await foundryClient.post(
     '/marketplace/checkout-session',
-    { templateId },
+    { templateId, returnUrl },
     { responseSchema: CheckoutSessionSchema },
   );
   return data;

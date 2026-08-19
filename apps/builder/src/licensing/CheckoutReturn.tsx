@@ -22,6 +22,8 @@ import { useEffect, useRef } from 'react';
 import { useLicense } from './LicenseContext';
 import { useEntitlements } from './entitlements';
 import { useAlert } from '../primitives/DialogFlow';
+import { useBuilderDispatch } from '../state/BuilderStateContext';
+import { normalizeContract } from '../state/importContract';
 import * as licenseApi from '../api/license/service';
 import * as marketplaceApi from '../api/marketplace/service';
 import { HAS_WORKSPACE } from '../api/_shared/config';
@@ -44,6 +46,7 @@ export function CheckoutReturn() {
   const { activate, syncWorkspace } = useLicense();
   const { grant } = useEntitlements();
   const alert = useAlert();
+  const dispatch = useBuilderDispatch();
   const ranRef = useRef(false);
 
   useEffect(() => {
@@ -115,10 +118,29 @@ export function CheckoutReturn() {
         const rec = await marketplaceApi.getReceiptBySession(sessionId);
         if (rec.data) {
           grant(rec.data.templateId);
-          await alert({
-            title: 'Purchase complete',
-            body: 'The template is now yours — open it from the marketplace and click "Use this template".',
-          });
+          // Open the freshly-purchased template straight onto the canvas,
+          // ready to edit — the buyer shouldn't have to hunt for it in the
+          // marketplace and click "Use". Load through `normalizeContract` so
+          // every node gets its Builder-internal `_uid` (Foundry serves only
+          // the public `nodeId`); without it the canvas would stall.
+          const tpl = await marketplaceApi.getTemplate(rec.data.templateId);
+          if (tpl.data?.contract) {
+            dispatch({
+              type: 'replaceContract',
+              contract: normalizeContract(tpl.data.contract),
+            });
+            await alert({
+              title: 'Purchase complete',
+              body: `"${tpl.data.name}" is now yours — opened and ready to edit.`,
+            });
+          } else {
+            // Ownership is granted regardless; degrade to a manual open if the
+            // contract fetch failed.
+            await alert({
+              title: 'Purchase complete',
+              body: 'The template is now yours — open it from the marketplace and click "Use this template".',
+            });
+          }
           return;
         }
 

@@ -25,7 +25,10 @@ export interface MarketplaceProvider {
    * preview-only card, matching the pay-before-you-get-the-goods gate.
    */
   getTemplate(id: string, receipt?: string): Promise<MarketplaceTemplate>;
-  createCheckoutSession(templateId: string): Promise<CheckoutSession>;
+  createCheckoutSession(
+    templateId: string,
+    returnUrl?: string,
+  ): Promise<CheckoutSession>;
   getReceiptBySession(sessionId: string): Promise<Receipt>;
 }
 
