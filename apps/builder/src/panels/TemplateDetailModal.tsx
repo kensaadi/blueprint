@@ -20,6 +20,7 @@ import { useEntitlements } from '../licensing/entitlements';
 import { useAlert } from '../primitives/DialogFlow';
 import { useBuilderDispatch } from '../state/BuilderStateContext';
 import { useMarketplaceTab } from '../state/MarketplaceTabContext';
+import { normalizeContract } from '../state/importContract';
 
 // Lazy so `@dashforge/blueprint` (+ flavor packs) only loads when a modal
 // actually opens — never in the Builder's first paint.
@@ -244,7 +245,17 @@ export function TemplateDetailModal({
                       });
                       return;
                     }
-                    dispatch({ type: 'replaceContract', contract: template.contract });
+                    // Foundry serves the contract with only the public
+                    // `nodeId` — the Builder-internal `_uid` handle is stripped
+                    // on export. Hydrate it (mint a `_uid` per node) before it
+                    // reaches the canvas, exactly as the import / team-template
+                    // paths do; without this the wireframe can't build its
+                    // selection/drop handles and stalls until a reload. Covers
+                    // free ("Use") and paid (buy → own → "Use") — same button.
+                    dispatch({
+                      type: 'replaceContract',
+                      contract: normalizeContract(template.contract),
+                    });
                     closeMarketplace();
                     onClose();
                   }}
