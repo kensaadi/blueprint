@@ -34,10 +34,12 @@ const CATEGORIES: { id: 'all' | TemplateCategory; label: string }[] = [
 function TemplateCard({
   t,
   owned,
+  outdated,
   onOpen,
 }: {
   t: MarketplaceTemplate;
   owned: boolean;
+  outdated: boolean;
   onOpen: (id: string) => void;
 }) {
   const free = isFreeTemplate(t);
@@ -54,7 +56,15 @@ function TemplateCard({
           style={{ color: 'var(--bd-accent)' }}
           aria-hidden
         />
-        {owned && !free ? (
+        {owned && outdated ? (
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[10px] font-medium"
+            style={{ background: 'var(--bd-accent-bg)', color: 'var(--bd-accent)' }}
+          >
+            <i className="ti ti-sparkles text-[11px]" aria-hidden />
+            New version
+          </span>
+        ) : owned ? (
           <span
             className="inline-flex items-center gap-1 rounded-full px-2 py-[2px] text-[10px] font-medium"
             style={{ background: 'var(--bd-success-bg)', color: 'var(--bd-success)' }}
@@ -97,7 +107,7 @@ export function MarketplacePanel() {
   const [price, setPrice] = useState<PriceFilter>('all');
   const [category, setCategory] = useState<'all' | TemplateCategory>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { owns } = useEntitlements();
+  const { owns, hasUpdate } = useEntitlements();
 
   useEffect(() => {
     let alive = true;
@@ -176,7 +186,13 @@ export function MarketplacePanel() {
         {items.length > 0 ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {items.map((t) => (
-              <TemplateCard key={t.id} t={t} owned={owns(t.id)} onOpen={setSelectedId} />
+              <TemplateCard
+                key={t.id}
+                t={t}
+                owned={owns(t.id)}
+                outdated={hasUpdate({ id: t.id, free: isFreeTemplate(t), version: t.version })}
+                onOpen={setSelectedId}
+              />
             ))}
           </div>
         ) : (

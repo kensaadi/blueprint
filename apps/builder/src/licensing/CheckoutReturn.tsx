@@ -18,12 +18,12 @@
  * Renders nothing. Mounted inside the License + Entitlements + DialogFlow
  * providers.
  */
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLicense } from './LicenseContext';
 import { useEntitlements } from './entitlements';
 import { useAlert } from '../primitives/DialogFlow';
-import { useBuilderDispatch } from '../state/BuilderStateContext';
-import { normalizeContract } from '../state/importContract';
+import { useFileOps } from '../hooks/useFileOps';
+import { saveMarketplaceTemplate } from '../workspaces/saveMarketplaceTemplate';
 import * as licenseApi from '../api/license/service';
 import * as marketplaceApi from '../api/marketplace/service';
 import { HAS_WORKSPACE } from '../api/_shared/config';
@@ -44,9 +44,10 @@ function cleanUrl(): void {
 
 export function CheckoutReturn() {
   const { activate, syncWorkspace } = useLicense();
-  const { grant } = useEntitlements();
+  const { refresh } = useEntitlements();
+  const { open } = useFileOps();
   const alert = useAlert();
-  const dispatch = useBuilderDispatch();
+  const [processing, setProcessing] = useState(false);
   const ranRef = useRef(false);
 
   useEffect(() => {
@@ -58,6 +59,9 @@ export function CheckoutReturn() {
     const sessionId = params.get('session_id');
     cleanUrl();
     if (!sessionId) return;
+    // Hold the Builder behind a loading veil while we wait for the webhook to
+    // mint the receipt and we download the contract into the workspace.
+    setProcessing(true);
 
     // Fire-and-forget poll. `ranRef` guarantees this body runs exactly
     // once, so we deliberately register NO cleanup: a StrictMode cleanup
@@ -65,7 +69,8 @@ export function CheckoutReturn() {
     // it would stop right after the /licenses probe and never reach the
     // /receipts fallback. This component lives at the app root and does
     // not unmount during a session.
-    (async () => {
+    void (async () => {
+     try {
       for (let i = 0; i < POLL_ATTEMPTS; i++) {
         // Subscription? Retrieve the signed license token.
         const lic = await licenseApi.getBySession(sessionId);
@@ -114,31 +119,27 @@ export function CheckoutReturn() {
           return;
         }
 
-        // One-shot? Retrieve the receipt and grant template ownership.
+        // One-shot? Retrieve the receipt, then SAVE the purchased template
+        // into the buyer's workspace (tagged with its provenance) so it lands
+        // in "your contracts", can never be re-bought, and opens ready to
+        // edit — no hunting back through the marketplace.
         const rec = await marketplaceApi.getReceiptBySession(sessionId);
         if (rec.data) {
-          grant(rec.data.templateId);
-          // Open the freshly-purchased template straight onto the canvas,
-          // ready to edit — the buyer shouldn't have to hunt for it in the
-          // marketplace and click "Use". Load through `normalizeContract` so
-          // every node gets its Builder-internal `_uid` (Foundry serves only
-          // the public `nodeId`); without it the canvas would stall.
           const tpl = await marketplaceApi.getTemplate(rec.data.templateId);
-          if (tpl.data?.contract) {
-            dispatch({
-              type: 'replaceContract',
-              contract: normalizeContract(tpl.data.contract),
-            });
+          const ref = tpl.data ? await saveMarketplaceTemplate(tpl.data) : null;
+          await refresh();
+          if (ref) {
+            await open(ref.workspaceId, ref.fileId);
             await alert({
               title: 'Purchase complete',
-              body: `"${tpl.data.name}" is now yours — opened and ready to edit.`,
+              body: `"${tpl.data!.name}" is now in your contracts — opened and ready to edit.`,
             });
           } else {
-            // Ownership is granted regardless; degrade to a manual open if the
-            // contract fetch failed.
+            // Ownership is recorded server-side by the save attempt; degrade to
+            // a manual open if the download/save failed.
             await alert({
               title: 'Purchase complete',
-              body: 'The template is now yours — open it from the marketplace and click "Use this template".',
+              body: 'The template is now yours — open it from your contracts.',
             });
           }
           return;
@@ -151,10 +152,34 @@ export function CheckoutReturn() {
         title: 'Almost there',
         body: 'Your payment is processing. Refresh in a moment to activate it.',
       });
+     } finally {
+      setProcessing(false);
+     }
     })();
     // Run exactly once on mount (ranRef guards StrictMode double-invoke).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return null;
+  if (!processing) return null;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      aria-label="Finalizing your purchase"
+      className="fixed inset-0 z-[95] flex flex-col items-center justify-center gap-3"
+      style={{ background: 'var(--bd-canvas)' }}
+    >
+      <i
+        className="ti ti-loader-2 animate-spin text-[26px]"
+        style={{ color: 'var(--bd-accent)' }}
+        aria-hidden
+      />
+      <div className="text-[14px] font-medium" style={{ color: 'var(--bd-text)' }}>
+        Finalizing your purchase…
+      </div>
+      <div className="text-[12px]" style={{ color: 'var(--bd-text-soft)' }}>
+        Adding it to your contracts — this takes a moment.
+      </div>
+    </div>
+  );
 }

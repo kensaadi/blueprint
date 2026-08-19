@@ -18,9 +18,10 @@ import { createCheckoutSession } from '../api/marketplace/service';
 import { outlineOf, countByType } from '../marketplace/atomSummary';
 import { useEntitlements } from '../licensing/entitlements';
 import { useAlert } from '../primitives/DialogFlow';
-import { useBuilderDispatch } from '../state/BuilderStateContext';
 import { useMarketplaceTab } from '../state/MarketplaceTabContext';
-import { normalizeContract } from '../state/importContract';
+import { useFileOps } from '../hooks/useFileOps';
+import { saveMarketplaceTemplate } from '../workspaces/saveMarketplaceTemplate';
+import { REMOTE_WORKSPACE_ID } from '../workspaces/remoteWorkspace';
 
 // Lazy so `@dashforge/blueprint` (+ flavor packs) only loads when a modal
 // actually opens — never in the Builder's first paint.
@@ -70,9 +71,10 @@ export function TemplateDetailModal({
   onClose: () => void;
 }) {
   const [template, setTemplate] = useState<MarketplaceTemplate | null>(null);
-  const { canUse } = useEntitlements();
+  const [busy, setBusy] = useState(false);
+  const { owns, hasUpdate, ownedFileId, refresh } = useEntitlements();
+  const { open } = useFileOps();
   const alert = useAlert();
-  const dispatch = useBuilderDispatch();
   const { closeMarketplace } = useMarketplaceTab();
 
   // Fetch the full detail (incl. contract) when a template is selected.
@@ -103,7 +105,52 @@ export function TemplateDetailModal({
   if (!templateId) return null;
 
   const free = template ? isFreeTemplate(template) : false;
-  const usable = template ? canUse({ id: template.id, free }) : false;
+  const owned = template ? owns(template.id) : false;
+  const outdated = template
+    ? hasUpdate({ id: template.id, free, version: template.version })
+    : false;
+
+  // Download (free) / update / snapshot-on-buy → save to the workspace tagged
+  // with provenance, then open the fresh copy. Ownership is the saved file.
+  async function acquire() {
+    if (!template) return;
+    if (!template.contract) {
+      await alert({
+        title: 'Unavailable',
+        body: 'This template could not be loaded. Please try again.',
+      });
+      return;
+    }
+    setBusy(true);
+    const ref = await saveMarketplaceTemplate(template);
+    await refresh();
+    setBusy(false);
+    if (ref) await open(ref.workspaceId, ref.fileId);
+    closeMarketplace();
+    onClose();
+  }
+
+  // Already-owned, current version → open the user's own copy, never re-fetch.
+  async function openOwned() {
+    if (!template) return;
+    const fid = ownedFileId(template.id);
+    if (!fid) return acquire(); // standalone (no WS file) → fall back to add
+    setBusy(true);
+    await open(REMOTE_WORKSPACE_ID, fid);
+    setBusy(false);
+    closeMarketplace();
+    onClose();
+  }
+
+  async function buy() {
+    if (!template) return;
+    const r = await createCheckoutSession(template.id);
+    if (r.error) {
+      await alert({ title: 'Checkout error', body: r.error.message });
+      return;
+    }
+    window.location.href = r.data.url;
+  }
 
   return (
     <div
@@ -160,12 +207,12 @@ export function TemplateDetailModal({
                 <span
                   className="rounded-full px-2.5 py-1 text-[11px] font-medium"
                   style={
-                    usable
+                    owned
                       ? { background: 'var(--bd-success-bg)', color: 'var(--bd-success)' }
                       : { background: 'var(--bd-accent-bg)', color: 'var(--bd-accent)' }
                   }
                 >
-                  {usable && !free ? 'Owned' : priceLabel(template)}
+                  {owned ? (outdated ? 'New version' : 'Owned') : priceLabel(template)}
                 </span>
                 <button
                   type="button"
@@ -231,54 +278,52 @@ export function TemplateDetailModal({
               className="flex items-center justify-end gap-3 border-t p-4"
               style={{ borderColor: 'var(--bd-border)' }}
             >
-              {usable ? (
+              {/*
+                Four states, driven by WS-backed ownership:
+                  owned + current  → Open (your own copy; never re-fetch)
+                  owned + outdated → Update to the new Foundry version
+                  free  + not owned→ Download (save to your workspace)
+                  paid  + not owned→ Buy (one-shot Stripe checkout)
+                Download/Update/Open persist to / read from the WS, so the
+                template lands in "your contracts" and can't be re-bought.
+              */}
+              {owned && !outdated ? (
                 <button
                   type="button"
-                  // Load the template's contract into the canvas, then
-                  // switch back from the marketplace tab so the user lands
-                  // on the freshly-loaded design.
-                  onClick={async () => {
-                    if (!template.contract) {
-                      await alert({
-                        title: 'Preview unavailable',
-                        body: 'This template could not be loaded. Please try again.',
-                      });
-                      return;
-                    }
-                    // Foundry serves the contract with only the public
-                    // `nodeId` — the Builder-internal `_uid` handle is stripped
-                    // on export. Hydrate it (mint a `_uid` per node) before it
-                    // reaches the canvas, exactly as the import / team-template
-                    // paths do; without this the wireframe can't build its
-                    // selection/drop handles and stalls until a reload. Covers
-                    // free ("Use") and paid (buy → own → "Use") — same button.
-                    dispatch({
-                      type: 'replaceContract',
-                      contract: normalizeContract(template.contract),
-                    });
-                    closeMarketplace();
-                    onClose();
-                  }}
-                  className="cursor-pointer rounded-lg border px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97]"
+                  onClick={() => void openOwned()}
+                  disabled={busy}
+                  className="cursor-pointer rounded-lg border px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97] disabled:opacity-60"
                   style={{ borderColor: 'var(--bd-border-strong)', color: 'var(--bd-text)' }}
                 >
-                  Use this template
+                  {busy ? 'Opening…' : 'Open'}
+                </button>
+              ) : owned && outdated ? (
+                <button
+                  type="button"
+                  onClick={() => void acquire()}
+                  disabled={busy}
+                  className="cursor-pointer rounded-lg px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97] disabled:opacity-60"
+                  style={{ background: 'var(--bd-accent)', color: 'var(--bd-accent-fg)' }}
+                >
+                  {busy ? 'Updating…' : 'Update to new version'}
+                </button>
+              ) : free ? (
+                <button
+                  type="button"
+                  onClick={() => void acquire()}
+                  disabled={busy}
+                  className="cursor-pointer rounded-lg border px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97] disabled:opacity-60"
+                  style={{ borderColor: 'var(--bd-border-strong)', color: 'var(--bd-text)' }}
+                >
+                  {busy ? 'Downloading…' : 'Download'}
                 </button>
               ) : (
                 <button
                   type="button"
-                  // Start a one-shot Stripe checkout on Foundry and
-                  // redirect to the hosted page. Ownership is granted on
-                  // return (CheckoutReturn), after the webhook mints the
-                  // signed receipt — not optimistically here.
-                  onClick={async () => {
-                    const r = await createCheckoutSession(template.id);
-                    if (r.error) {
-                      await alert({ title: 'Checkout error', body: r.error.message });
-                      return;
-                    }
-                    window.location.href = r.data.url;
-                  }}
+                  // One-shot Stripe checkout on Foundry → hosted page. Ownership
+                  // is recorded on return (CheckoutReturn saves the contract to
+                  // the WS), not optimistically here.
+                  onClick={() => void buy()}
                   className="cursor-pointer rounded-lg px-5 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.97]"
                   style={{ background: 'var(--bd-accent)', color: 'var(--bd-accent-fg)' }}
                 >
