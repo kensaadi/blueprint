@@ -21,6 +21,24 @@ type StoredSession = {
 
 let cached: StoredSession | null | undefined;
 
+// Reactive layer — so the app can gate on "signed in" and register the remote
+// workspace the instant a session appears (login) or vanishes (logout),
+// without polling. `cached` is a stable reference between changes, so it
+// doubles as a useSyncExternalStore snapshot.
+type Listener = () => void;
+const listeners = new Set<Listener>();
+function notify(): void {
+  for (const l of listeners) l();
+}
+
+/** Subscribe to session changes (login / logout). Returns an unsubscribe. */
+export function subscribeSession(cb: Listener): () => void {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+
 export function loadSession(): StoredSession | null {
   if (cached !== undefined) return cached;
   try {
@@ -39,6 +57,7 @@ export function saveSession(token: string, user: WorkspaceUser): void {
   } catch {
     // private mode / quota — session still applies in-memory this session
   }
+  notify();
 }
 
 export function clearSession(): void {
@@ -48,6 +67,7 @@ export function clearSession(): void {
   } catch {
     // ignore
   }
+  notify();
 }
 
 /** The current Bearer token, or null when not signed in. */

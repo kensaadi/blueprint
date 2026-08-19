@@ -1,52 +1,45 @@
 /**
- * First-run onboarding (Phase 1) — the self-hosted setup screen.
+ * Auth gate (Model A) — the self-hosted bundle requires a signed-in session
+ * before the Builder is usable, so nobody's work lives only in a browser
+ * cache that a clear would wipe. Basic file persistence is free (Community);
+ * signing in is the price of never losing your contracts, not a paid feature.
  *
- * When the bundle is opened for the first time (a Workspace Service is
- * configured, nobody is signed in, and no owner exists yet) this takes over
- * the screen: creating the workspace is the ONLY thing that works until it's
- * done, so we don't bury it in the editor. Step 1 (create the owner account)
- * is the single active action; steps 2–3 are shown as a roadmap so the user
- * knows what's next. "Keep building on Community" dismisses it (local-only).
+ * Two modes, chosen by the WS's public first-run status:
+ *   - `initialized === false` → CREATE the workspace owner (first run).
+ *   - `initialized === true`  → SIGN IN (returning owner / invited member).
  *
- * On success the owner is created + signed in → the overlay's own condition
- * (`sessionToken()`) turns false and it disappears, handing off to the normal
- * Builder + the getting-started checklist.
+ * It takes over the whole screen and cannot be dismissed — there is no
+ * local-only escape in the bundle. On success the session persists and a
+ * reload hands off to the fully signed-in Builder (WorkspaceBar, header badge
+ * and the remote-workspace registrar all read the session at mount).
+ *
+ * Without a Workspace Service (`HAS_WORKSPACE === false`, the dev-only
+ * standalone) there is no gate — it renders nothing.
  */
 import { useState } from 'react';
 import { HAS_WORKSPACE } from '../api/_shared/config';
-import { sessionToken } from '../api/workspace/session';
-import { register } from '../api/workspace/service';
+import { login, register } from '../api/workspace/service';
+import { useSignedIn } from '../hooks/useSession';
 import { useAuthStatus, invalidateAuthStatus } from '../hooks/useAuthStatus';
-
-const DISMISSED_KEY = 'builder-v2:onboarding-dismissed:v1';
 
 function Step({
   n,
   title,
   detail,
-  active,
 }: {
   n: number;
   title: string;
   detail: string;
-  active?: boolean;
 }) {
   return (
     <div className="flex items-center gap-[10px] px-[2px] py-[6px]">
       <span
         className="flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full text-[12px] font-medium"
-        style={
-          active
-            ? { background: 'var(--bd-accent)', color: 'var(--bd-accent-fg)' }
-            : { border: '1px solid var(--bd-border-strong)', color: 'var(--bd-text-faint)' }
-        }
+        style={{ border: '1px solid var(--bd-border-strong)', color: 'var(--bd-text-faint)' }}
       >
         {n}
       </span>
-      <span
-        className="text-[14px]"
-        style={{ color: active ? 'var(--bd-text)' : 'var(--bd-text-soft)', fontWeight: active ? 500 : 400 }}
-      >
+      <span className="text-[14px]" style={{ color: 'var(--bd-text-soft)' }}>
         {title}
       </span>
       <span className="ml-auto text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
@@ -57,65 +50,73 @@ function Step({
 }
 
 export function FirstRunOnboarding() {
+  const signedIn = useSignedIn();
   const initialized = useAuthStatus();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(DISMISSED_KEY) === '1',
-  );
 
-  // Show ONLY on a genuine first run: bundle mode, not signed in, no owner
-  // yet, not dismissed. `initialized === null` = still probing (render
-  // nothing to avoid a flash).
-  if (
-    !HAS_WORKSPACE ||
-    sessionToken() ||
-    initialized !== false ||
-    dismissed
-  ) {
+  // Gate only in the bundle, only while not signed in. `initialized === null`
+  // = still probing → render nothing to avoid a flash.
+  if (!HAS_WORKSPACE || signedIn || initialized === null) {
     return null;
   }
 
-  async function create() {
-    if (password.length < 8) {
+  const mode: 'create' | 'signin' = initialized ? 'signin' : 'create';
+
+  async function submit() {
+    if (mode === 'create' && password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
     }
     setBusy(true);
     setError(null);
-    const r = await register(email.trim(), password);
+    const r =
+      mode === 'create'
+        ? await register(email.trim(), password)
+        : await login(email.trim(), password);
     setBusy(false);
     if (r.error) {
-      setError(r.error.message);
+      setError(
+        r.error.message ||
+          (mode === 'signin' ? 'Wrong email or password.' : 'Could not create the workspace.'),
+      );
       return;
     }
     invalidateAuthStatus();
-    // The session now persists in localStorage. A reload hands off to the
-    // fully-signed-in Builder in one consistent step — the WorkspaceBar,
-    // header badge and getting-started checklist all read the session at
-    // mount, and there's no global session signal to re-render those
-    // siblings in place. This is a one-time setup moment, so a reload reads
-    // as natural rather than jarring.
+    // Session now persists. A reload hands off to the signed-in Builder in one
+    // consistent step (siblings read the session at mount).
     window.location.reload();
   }
 
-  function keepCommunity() {
-    try {
-      localStorage.setItem(DISMISSED_KEY, '1');
-    } catch {
-      // ignore
-    }
-    setDismissed(true);
-  }
+  const copy =
+    mode === 'create'
+      ? {
+          title: 'Set up your workspace',
+          sub: "You're the first here — this bundle runs entirely on your own server.",
+          cardTitle: 'Create your workspace',
+          cardHint: "you'll be the owner",
+          cta: busy ? 'Creating…' : 'Create workspace',
+          pwPlaceholder: 'Choose a password (min 8 characters)',
+          pwAutocomplete: 'new-password',
+        }
+      : {
+          title: 'Sign in',
+          sub: 'Your contracts live on this server — sign in to open them.',
+          cardTitle: 'Sign in to your workspace',
+          cardHint: 'welcome back',
+          cta: busy ? 'Signing in…' : 'Sign in',
+          pwPlaceholder: 'Your password',
+          pwAutocomplete: 'current-password',
+        };
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="Set up your workspace"
+      aria-label={copy.title}
       className="fixed inset-0 z-[90] flex items-center justify-center overflow-auto p-6"
       style={{ background: 'var(--bd-canvas)' }}
     >
@@ -133,33 +134,26 @@ export function FirstRunOnboarding() {
         </div>
 
         <h1 className="mb-1 text-[22px] font-medium" style={{ color: 'var(--bd-text)' }}>
-          Set up your workspace
+          {copy.title}
         </h1>
         <p className="mb-6 text-[14px] leading-relaxed" style={{ color: 'var(--bd-text-soft)' }}>
-          You're the first here — this bundle runs entirely on your own server.
+          {copy.sub}
         </p>
 
-        {/* Step 1 — active */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            void create();
+            void submit();
           }}
           className="rounded-2xl p-4"
           style={{ border: '2px solid var(--bd-accent)', background: 'var(--bd-panel)' }}
         >
           <div className="mb-3 flex items-center gap-[10px]">
-            <span
-              className="flex h-[22px] w-[22px] items-center justify-center rounded-full text-[12px] font-medium"
-              style={{ background: 'var(--bd-accent)', color: 'var(--bd-accent-fg)' }}
-            >
-              1
-            </span>
             <span className="text-[15px] font-medium" style={{ color: 'var(--bd-text)' }}>
-              Create your workspace
+              {copy.cardTitle}
             </span>
             <span className="ml-auto text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
-              you'll be the owner
+              {copy.cardHint}
             </span>
           </div>
           <div className="flex flex-col gap-2">
@@ -179,9 +173,9 @@ export function FirstRunOnboarding() {
             />
             <input
               type="password"
-              autoComplete="new-password"
+              autoComplete={copy.pwAutocomplete}
               required
-              placeholder="Choose a password (min 8 characters)"
+              placeholder={copy.pwPlaceholder}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="rounded-lg border px-3 py-2 text-[13px] outline-none"
@@ -202,31 +196,22 @@ export function FirstRunOnboarding() {
               className="mt-1 cursor-pointer rounded-lg px-4 py-[9px] text-[13px] font-medium transition duration-100 hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
               style={{ background: 'var(--bd-accent)', color: 'var(--bd-accent-fg)' }}
             >
-              {busy ? 'Creating…' : 'Create workspace'}
+              {copy.cta}
             </button>
           </div>
         </form>
 
-        {/* Steps 2–3 — roadmap preview */}
-        <div className="mt-2 px-2">
-          <Step n={2} title="Activate your plan" detail="remote storage · versioning · teams" />
-          <div className="my-[6px] h-px" style={{ background: 'var(--bd-border)' }} />
-          <Step n={3} title="Invite your team" detail="share a link · Team plan" />
-        </div>
+        {mode === 'create' && (
+          <div className="mt-2 px-2">
+            <Step n={2} title="Activate a plan" detail="versioning · teams · deploy" />
+            <div className="my-[6px] h-px" style={{ background: 'var(--bd-border)' }} />
+            <Step n={3} title="Invite your team" detail="share a link · Team plan" />
+          </div>
+        )}
 
-        <div className="mt-6 flex items-center justify-between">
-          <span className="flex items-center gap-[6px] text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
-            <i className="ti ti-lock text-[13px]" aria-hidden />
-            Self-hosted — your contracts never leave this server.
-          </span>
-          <button
-            type="button"
-            onClick={keepCommunity}
-            className="cursor-pointer text-[12px] font-medium transition hover:opacity-80"
-            style={{ color: 'var(--bd-text-soft)' }}
-          >
-            Keep building on Community
-          </button>
+        <div className="mt-6 flex items-center gap-[6px] text-[12px]" style={{ color: 'var(--bd-text-faint)' }}>
+          <i className="ti ti-lock text-[13px]" aria-hidden />
+          Self-hosted — your contracts never leave this server, and never a cache clear.
         </div>
       </div>
     </div>
