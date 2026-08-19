@@ -91,11 +91,11 @@ export function GettingStartedChecklist() {
           <i className="ti ti-x" aria-hidden />
         </button>
       </div>
-      <Row done title="Workspace created" detail="" />
+      <Row done title="Workspace created" detail="your contracts are saved on this server" />
       <Row
         done={false}
-        title="Activate your plan"
-        detail="unlock remote storage, versioning & teams — choose a plan below"
+        title="Activate a plan"
+        detail="unlock versioning, team seats & deploy — choose a plan below"
       />
       <Row done={false} informational title="Invite your team" detail="available on Team" />
     </section>
