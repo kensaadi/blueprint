@@ -30,6 +30,8 @@ export const CardSchema = z.object({
   icon: z.string(),
   categories: z.array(z.string()),
   pricing: WirePricingSchema,
+  /** Free-text revision marker from Foundry; drives the "new version" badge. */
+  version: z.string().optional(),
 });
 export type Card = z.infer<typeof CardSchema>;
 

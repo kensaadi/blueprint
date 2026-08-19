@@ -41,6 +41,12 @@ export type MarketplaceTemplate = {
   categories: TemplateCategory[];
   pricing: TemplatePricing;
   /**
+   * Free-text revision marker set on the Foundry template. Stored alongside a
+   * downloaded/purchased copy in the WS; when it later differs from the card's
+   * value the Builder shows a "new version" badge. Undefined when unset.
+   */
+  version?: string;
+  /**
    * The seeded contract, delivered for free templates and snapshot-on-buy
    * for paid ones. Undefined = preview-only card (not yet owned).
    */

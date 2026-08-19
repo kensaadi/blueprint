@@ -51,6 +51,9 @@ export const WsFileEntrySchema = z.object({
   name: z.string(),
   version: z.number(),
   updatedAt: z.string(),
+  /** Marketplace provenance (empty/absent for dev-authored files). */
+  sourceTemplateId: z.string().optional(),
+  sourceVersion: z.string().optional(),
 });
 export type WsFileEntry = z.infer<typeof WsFileEntrySchema>;
 export const FilesResponseSchema = z.object({ files: z.array(WsFileEntrySchema) });

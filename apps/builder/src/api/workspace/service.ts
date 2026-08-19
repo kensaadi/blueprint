@@ -159,12 +159,24 @@ export async function createFile(
   wid: string,
   name: string,
   content: unknown,
+  /**
+   * Marketplace provenance — set only when saving a downloaded/purchased
+   * Foundry template, so the WS records which template + version it is (used
+   * later for ownership + the "new version" badge). Omitted for the dev's own
+   * files.
+   */
+  source?: { templateId: string; version?: string },
 ): Promise<Result<WsContractFile>> {
   return attempt(
     workspaceClient
       .post(
         `/workspaces/${wid}/files`,
-        { name, content },
+        {
+          name,
+          content,
+          sourceTemplateId: source?.templateId,
+          sourceVersion: source?.version,
+        },
         { responseSchema: WsContractFileSchema },
       )
       .then((r) => r.data),

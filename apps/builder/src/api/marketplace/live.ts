@@ -28,6 +28,7 @@ function cardToTemplate(c: Card): MarketplaceTemplate {
     icon: c.icon,
     categories: c.categories as TemplateCategory[],
     pricing: c.pricing,
+    version: c.version,
   };
 }
 
