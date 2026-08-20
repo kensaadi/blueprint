@@ -29,7 +29,8 @@ export type Tier = 'community' | 'pro' | 'team' | 'business' | 'enterprise';
  * unlocks — it never unlocks a template. Extend as features land.
  */
 export type FeatureFlag =
-  | 'remote-storage' // S3 / Git / HTTP workspaces
+  | 'ai-assist' // AI contract authoring — generate & edit (Pro+)
+  | 'remote-storage' // legacy: basic storage is free (Model A); no longer gates
   | 'versioning'
   | 'shared-workspaces'
   | 'collab-lock'

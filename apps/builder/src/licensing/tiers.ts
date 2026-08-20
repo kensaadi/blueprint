@@ -31,9 +31,9 @@ export type TierMeta = {
   note?: string;
 };
 
-// Basic server-side storage is free (Model A) — not a Pro perk. Pro starts
-// at versioning; the paid ladder builds from there.
-const PRO_FEATURES: FeatureFlag[] = ['versioning'];
+// Basic server-side storage is free (Model A) — not a Pro perk. Pro is the
+// AI copilot + version history; the paid ladder builds from there.
+const PRO_FEATURES: FeatureFlag[] = ['ai-assist', 'versioning'];
 const TEAM_FEATURES: FeatureFlag[] = [
   ...PRO_FEATURES,
   'shared-workspaces',
@@ -55,23 +55,22 @@ export const TIERS: readonly TierMeta[] = [
     id: 'community',
     label: 'Community',
     priceLabel: 'Free',
-    tagline: 'Local projects, unlimited atoms',
+    tagline: 'Unlimited atoms, saved on your server',
     cta: 'none',
     features: [],
-    highlights: ['36 atoms · tw + mui', 'Export JSON', 'Local filesystem save'],
+    highlights: ['36 atoms · Tailwind + MUI', 'Unlimited projects', 'Saved on your server', 'Export JSON'],
   },
   {
     id: 'pro',
     label: 'Pro',
     priceLabel: '$39 / mo',
-    tagline: 'Remote storage & versioning',
+    tagline: 'AI authoring & version history',
     cta: 'stripe',
     features: PRO_FEATURES,
     highlights: [
       'Everything in Community',
-      'Remote storage S3 / Git',
-      'Versioning',
-      'BYOK AI',
+      'AI: generate & edit contracts',
+      'Version history & restore',
     ],
   },
   {
@@ -81,7 +80,7 @@ export const TIERS: readonly TierMeta[] = [
     tagline: 'Shared workspaces, lock & roles',
     cta: 'stripe',
     features: TEAM_FEATURES,
-    highlights: ['Everything in Pro', 'Shared workspaces', 'Collab lock · roles'],
+    highlights: ['Everything in Pro', 'Shared workspaces & seats', 'Roles & collab lock', 'Publish to environments'],
     note: 'min 3 seats',
   },
   {
@@ -101,7 +100,7 @@ export const TIERS: readonly TierMeta[] = [
     tagline: 'SAML, on-prem, dedicated support',
     cta: 'contact',
     features: ENTERPRISE_FEATURES,
-    highlights: ['Everything in Business', 'SAML', 'On-prem license · SLA'],
+    highlights: ['Everything in Business', 'SAML', 'On-prem & SLA', 'Private catalog'],
   },
 ];
 
