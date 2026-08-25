@@ -20,7 +20,8 @@
  *     outline/ghost variant swap tied to `sourceOpen`.
  */
 import { Button, Menu, MenuTrigger, MenuContent, MenuItem } from '@dashforge/tw';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { AIModal } from '../panels/AIPanel';
 
 type HeaderActionsProps = {
   theme: 'dark' | 'light';
@@ -92,8 +93,20 @@ export function HeaderActions({
   onOpen,
   canExport,
 }: HeaderActionsProps) {
+  const [aiOpen, setAiOpen] = useState(false);
   return (
     <>
+      <Button
+        variant="ghost"
+        color="primary"
+        onClick={() => setAiOpen(true)}
+        aria-label="Generate with AI"
+        title="Generate a layout from a description"
+      >
+        <i className="ti ti-sparkles mr-1" aria-hidden />
+        AI
+      </Button>
+      <AIModal open={aiOpen} onClose={() => setAiOpen(false)} />
       <Button
         variant="ghost"
         color="secondary"
