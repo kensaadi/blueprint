@@ -1,5 +1,7 @@
 import type { Registry } from '@dashforge/blueprint-core';
 import { MuiStack } from './bindings/MuiStack';
+import { MuiIcon } from './bindings/MuiIcon';
+import { MuiCustom } from './bindings/MuiCustom';
 import { MuiGrid } from './bindings/MuiGrid';
 import { MuiCard } from './bindings/MuiCard';
 import { MuiSection } from './bindings/MuiSection';
@@ -54,6 +56,7 @@ export const muiRegistry: Registry = {
   container: MuiContainer,
   badge: MuiBadge,
   chip: MuiChip,
+  icon: MuiIcon,
   avatar: MuiAvatar,
   image: MuiImage,
   video: MuiVideo,
@@ -77,4 +80,5 @@ export const muiRegistry: Registry = {
   autocomplete: MuiAutocomplete,
   otp: MuiOtp,
   form: MuiForm,
+  custom: MuiCustom,
 };

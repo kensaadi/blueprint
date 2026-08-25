@@ -98,6 +98,7 @@ export const ATOM_CATEGORIES: AtomCategory[] = [
     atoms: [
       { type: 'badge',    icon: 'circle-filled' },
       { type: 'chip',     icon: 'tag' },
+      { type: 'icon',     icon: 'sticker' },
       { type: 'avatar',   icon: 'user-circle' },
       { type: 'tooltip',  icon: 'info-circle' },
       { type: 'calendar', icon: 'calendar' },
@@ -109,6 +110,14 @@ export const ATOM_CATEGORIES: AtomCategory[] = [
     atoms: [
       { type: 'image', icon: 'photo' },
       { type: 'video', icon: 'video' },
+    ],
+  },
+  {
+    id: 'advanced',
+    label: 'Advanced',
+    atoms: [
+      // Escape hatch — inserts a custom node the consumer resolves at runtime.
+      { type: 'custom', icon: 'puzzle' },
     ],
   },
 ];

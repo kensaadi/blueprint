@@ -103,11 +103,18 @@ function renderInner(node: BlueprintNode, ctx: CompileContext, key: number): Rea
       ? { _childLayoutHints: node.children.map((c) => c.layoutHint) }
       : {};
 
-  // 2. customNodes (per-instance user extensions) beat the native registry.
-  // Wrapped in a NodeErrorBoundary — a throwing user component becomes
-  // an inline fallback, not a whole-tree crash.
-  if (ctx.customNodes?.[node.type]) {
-    const Custom = ctx.customNodes[node.type];
+  // 2. customNodes (user extensions) beat the native registry. Two shapes
+  // resolve through the SAME registry + error boundary:
+  //   - the first-class `custom` atom → keyed by its `component` prop
+  //   - a bare unknown/free-form type  → keyed by node.type (legacy)
+  // A throwing user component becomes an inline fallback, not a whole-tree
+  // crash. An unresolved `custom` falls through to the registry placeholder.
+  const customKey =
+    node.type === 'custom'
+      ? (typeof node.props?.component === 'string' ? node.props.component : undefined)
+      : node.type;
+  if (customKey && ctx.customNodes?.[customKey]) {
+    const Custom = ctx.customNodes[customKey];
     return (
       <NodeErrorBoundary key={key} scope="customNode" nodeType={node.type} nodeId={node.nodeId}>
         {wrap(Custom, undefined, { ...node.props, ...accessProps, ...disabledProps }, compiledChildren, hasNestedChildren)}

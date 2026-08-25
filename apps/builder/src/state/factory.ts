@@ -122,6 +122,9 @@ function defaultPropsFor(type: AtomType): Record<string, unknown> {
     // ─── Display ─────────────────────────────────────────────────
     case 'badge':    return { content: '1' };
     case 'chip':     return { label: 'Chip' };
+    // `icon` requires a registry id; `save` is the canonical demo id (as
+    // iconButton) — the user swaps it via the Inspector's Icon Picker.
+    case 'icon':     return { icon: 'save' };
     // avatarProps has no `alt` — the accessible name derives from
     // `name` (initials fallback) or the wrapping component.
     case 'avatar':   return {};
@@ -144,6 +147,11 @@ function defaultPropsFor(type: AtomType): Record<string, unknown> {
         rounded: 'md',
         controls: true,
       };
+
+    // ─── Escape hatch ────────────────────────────────────────────
+    // `component` is required (the runtime resolution key). Seed a
+    // placeholder name the user renames in the Inspector.
+    case 'custom': return { component: 'MyComponent' };
 
     default: return {};
   }

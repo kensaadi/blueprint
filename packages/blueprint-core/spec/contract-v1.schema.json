@@ -63,6 +63,7 @@
             "container",
             "badge",
             "chip",
+            "icon",
             "avatar",
             "image",
             "video",
@@ -85,7 +86,8 @@
             "dateRange",
             "autocomplete",
             "otp",
-            "form"
+            "form",
+            "custom"
           ],
           "description": "The atom kind. Closed catalog — the runtime renders exactly these; domain rendering is a mount-time slot override keyed by nodeId, not a new type."
         },
@@ -472,6 +474,25 @@
             "properties": {
               "props": {
                 "$ref": "#/$defs/props_chip"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "icon"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "props": {
+                "$ref": "#/$defs/props_icon"
               }
             }
           }
@@ -909,6 +930,25 @@
             "properties": {
               "props": {
                 "$ref": "#/$defs/props_form"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "custom"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "props": {
+                "$ref": "#/$defs/props_custom"
               }
             }
           }
@@ -2451,6 +2491,71 @@
       },
       "required": [
         "label"
+      ],
+      "additionalProperties": false
+    },
+    "props_icon": {
+      "type": "object",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "xs",
+            "sm",
+            "md",
+            "lg",
+            "xl"
+          ]
+        },
+        "color": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "primary",
+            "secondary",
+            "success",
+            "warning",
+            "danger",
+            "info"
+          ]
+        },
+        "label": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "object",
+              "properties": {
+                "$t": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "vars": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "$t"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "required": [
+        "icon"
       ],
       "additionalProperties": false
     },
@@ -6771,6 +6876,35 @@
     "props_form": {
       "type": "object",
       "properties": {},
+      "additionalProperties": false
+    },
+    "props_custom": {
+      "type": "object",
+      "properties": {
+        "component": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dataSchema": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "config": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "required": [
+        "component"
+      ],
       "additionalProperties": false
     }
   }

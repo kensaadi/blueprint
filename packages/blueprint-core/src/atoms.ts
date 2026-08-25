@@ -225,6 +225,22 @@ const chipProps = z.object({
   icon: z.string().min(1).optional(),
 }).strict();
 
+/**
+ * Icon — a standalone, decorative or labelled icon. `icon` is an id resolved
+ * against the consumer's IconRegistry (the SAME registry as `button.icon` /
+ * `chip.icon`), so the contract stays domain-free: it carries a NAME, the
+ * consumer maps it to whatever design system they ship. `label` absent ⇒ the
+ * icon is decorative (rendered aria-hidden).
+ */
+const iconProps = z.object({
+  /** Icon id from the registry (the icon-ref validation pass checks membership). */
+  icon: z.string().min(1, 'icon.icon is required'),
+  size: z.enum(['xs', 'sm', 'md', 'lg', 'xl']).optional(),
+  color: intentColor.optional(),
+  /** Accessible label; omit for a purely decorative icon (aria-hidden). */
+  label: translatableStringSchema.optional(),
+}).strict();
+
 // ─── Tier B: navigation / interaction ───────────────────────────────
 
 /**
@@ -607,6 +623,29 @@ const otpProps = z.object({
 /** `form` props are minimal — the lookup key is `node.id`, not a prop. */
 const formProps = z.object({}).strict();
 
+/**
+ * `custom` — the first-class escape hatch for domain / data / logic-coupled UI
+ * (file upload, data grids, record repeaters, third-party widgets). Keeps the
+ * contract declarative + portable: the CONSUMER supplies the implementation,
+ * resolved at runtime by `component` name — or, per-instance, by a
+ * `slots[nodeId]` override. Resolution order: slots[nodeId] → components[
+ * component] → `children` (declarative fallback / skeleton) → red block.
+ *
+ *   - `component`  the registered component name (the resolution key).
+ *   - `dataSchema` the shape the component expects (field → type hint) — lets
+ *                  the Builder preview a labelled placeholder and documents the
+ *                  remap target for the consumer's data fetch.
+ *   - `config`     static params forwarded to the component verbatim.
+ *
+ * Deliberately EXCLUDED from the AI grounding catalog: the copilot cannot know
+ * a customer's domain, so it never emits `custom` (but validates one if present).
+ */
+const customProps = z.object({
+  component: z.string().min(1, 'custom.component is required — the registered component name'),
+  dataSchema: z.record(z.string(), z.string()).optional(),
+  config: z.record(z.string(), z.unknown()).optional(),
+}).strict();
+
 // ─────────────────────────────────────────────────────────────────────
 // Catalog registry — single source of truth read by validator + Builder
 // ─────────────────────────────────────────────────────────────────────
@@ -627,6 +666,7 @@ export const ATOM_PROP_SCHEMAS = {
   container:    containerProps,
   badge:        badgeProps,
   chip:         chipProps,
+  icon:         iconProps,
   avatar:       avatarProps,
   image:        imageProps,
   video:        videoProps,
@@ -650,6 +690,7 @@ export const ATOM_PROP_SCHEMAS = {
   autocomplete: autocompleteProps,
   otp:          otpProps,
   form:         formProps,
+  custom:       customProps,
 } as const;
 
 export const ATOM_NAMES = Object.keys(ATOM_PROP_SCHEMAS) as Array<keyof typeof ATOM_PROP_SCHEMAS>;

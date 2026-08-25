@@ -27,6 +27,8 @@ import { TwBox } from './bindings/TwBox';
 import { TwContainer } from './bindings/TwContainer';
 import { TwBadge } from './bindings/TwBadge';
 import { TwChip } from './bindings/TwChip';
+import { TwIcon } from './bindings/TwIcon';
+import { TwCustom } from './bindings/TwCustom';
 import { TwAvatar } from './bindings/TwAvatar';
 import { TwImage } from './bindings/TwImage';
 import { TwVideo } from './bindings/TwVideo';
@@ -54,6 +56,7 @@ export const twRegistry: Registry = {
   container: TwContainer,
   badge: TwBadge,
   chip: TwChip,
+  icon: TwIcon,
   avatar: TwAvatar,
   image: TwImage,
   video: TwVideo,
@@ -77,4 +80,5 @@ export const twRegistry: Registry = {
   autocomplete: TwAutocomplete,
   otp: TwOtp,
   form: TwForm,
+  custom: TwCustom,
 };
