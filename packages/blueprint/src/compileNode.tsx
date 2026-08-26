@@ -28,6 +28,26 @@ import type {
   VisibilityRule,
   AccessRule,
 } from '@dashforge/blueprint-core';
+import { collectFieldDefaults } from '@dashforge/blueprint-core';
+
+/**
+ * Merge the contract-authored field defaults (static, from `props.defaultValue`)
+ * under the runtime FormConfig defaults (the app / backend override). Contract
+ * defaults are the base; anything the consumer passes in `forms[id].defaultValues`
+ * wins. Only touches the config when there is at least one contract default, so a
+ * form with no authored defaults behaves exactly as before.
+ */
+function withContractDefaults(
+  stored: FormConfig | undefined,
+  contractDefaults: Record<string, unknown>,
+): FormConfig | undefined {
+  if (Object.keys(contractDefaults).length === 0) return stored;
+  return {
+    ...stored,
+    onSubmit: stored?.onSubmit ?? (() => {}),
+    defaultValues: { ...contractDefaults, ...stored?.defaultValues },
+  };
+}
 import { VisibilityGate, type NamedRuleMap } from './VisibilityGate';
 import { NodeErrorBoundary } from './NodeErrorBoundary';
 
@@ -126,7 +146,10 @@ function renderInner(node: BlueprintNode, ctx: CompileContext, key: number): Rea
   //    the resolved FormConfig as an extra prop from the compiler.
   if (node.type === 'form') {
     const FormBinding = ctx.registry.form;
-    const formConfig = node.nodeId ? ctx.forms?.[node.nodeId] : undefined;
+    const stored = node.nodeId ? ctx.forms?.[node.nodeId] : undefined;
+    // Seed the form with the contract's static field defaults; the app's
+    // runtime FormConfig.defaultValues still wins over them.
+    const formConfig = withContractDefaults(stored, collectFieldDefaults(node));
     return (
       <FormBinding key={key} formConfig={formConfig} {...accessProps} {...disabledProps}>
         {compiledChildren}

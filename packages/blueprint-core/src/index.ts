@@ -94,3 +94,4 @@ export {
   pointerLeaf,
 } from './diagnostics';
 export type { AncestorCrumb } from './diagnostics';
+export { collectFieldDefaults } from './defaults';

@@ -463,6 +463,8 @@ const fieldTooltipSchema = z.union([
 
 const fieldProps = z.object({
   name: z.string().min(1, 'field.name is required and must be non-empty'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   /** Plain string OR InlineNode[] — rich text supported for format hints with `code` etc. */
@@ -494,6 +496,8 @@ const selectOption = z.object({
 
 const selectProps = z.object({
   name: z.string().min(1, 'select.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -503,6 +507,8 @@ const selectProps = z.object({
 
 const dateProps = z.object({
   name: z.string().min(1, 'date.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -514,12 +520,16 @@ const dateProps = z.object({
 
 const checkboxProps = z.object({
   name: z.string().min(1, 'checkbox.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.boolean().optional(),
   label: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
 }).strict();
 
 const switchProps = z.object({
   name: z.string().min(1, 'switch.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.boolean().optional(),
   label: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
 }).strict();
@@ -528,6 +538,8 @@ const switchProps = z.object({
 
 const textareaProps = z.object({
   name: z.string().min(1, 'textarea.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -538,6 +550,8 @@ const textareaProps = z.object({
 
 const numberProps = z.object({
   name: z.string().min(1, 'number.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.number().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -556,6 +570,8 @@ const radioOption = z.object({
 
 const radioProps = z.object({
   name: z.string().min(1, 'radio.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
   required: z.boolean().optional(),
@@ -567,6 +583,8 @@ const radioProps = z.object({
 
 const timeProps = z.object({
   name: z.string().min(1, 'time.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -578,6 +596,8 @@ const timeProps = z.object({
 
 const dateTimeProps = z.object({
   name: z.string().min(1, 'dateTime.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -586,6 +606,8 @@ const dateTimeProps = z.object({
 
 const dateRangeProps = z.object({
   name: z.string().min(1, 'dateRange.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.object({ from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }).strict().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -604,6 +626,8 @@ const autocompleteOption = z.object({
 
 const autocompleteProps = z.object({
   name: z.string().min(1, 'autocomplete.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   placeholder: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
@@ -613,6 +637,8 @@ const autocompleteProps = z.object({
 
 const otpProps = z.object({
   name: z.string().min(1, 'otp.name is required'),
+  /** Initial value the field starts with — a static default authored in the contract; the backend may overwrite it. @default undefined */
+  defaultValue: z.string().optional(),
   label: translatableStringSchema.optional(),
   helperText: inlineTextSchema.optional(),
   required: z.boolean().optional(),

@@ -62,3 +62,33 @@ describe('schema — custom (escape hatch)', () => {
     ).toBe(false);
   });
 });
+
+describe('schema — defaultValue (field initial state, typed per atom)', () => {
+  test('field/textarea/otp take a string', () => {
+    expect(ATOM_PROP_SCHEMAS.field.safeParse({ name: 'x', defaultValue: 'v' }).success).toBe(true);
+    expect(ATOM_PROP_SCHEMAS.field.safeParse({ name: 'x', defaultValue: 5 }).success).toBe(false);
+  });
+  test('number takes a number', () => {
+    expect(ATOM_PROP_SCHEMAS.number.safeParse({ name: 'x', defaultValue: 5 }).success).toBe(true);
+    expect(ATOM_PROP_SCHEMAS.number.safeParse({ name: 'x', defaultValue: '5' }).success).toBe(false);
+  });
+  test('checkbox/switch take a boolean', () => {
+    expect(ATOM_PROP_SCHEMAS.checkbox.safeParse({ name: 'x', defaultValue: true }).success).toBe(true);
+    expect(ATOM_PROP_SCHEMAS.switch.safeParse({ name: 'x', defaultValue: 'true' }).success).toBe(false);
+  });
+  test('radio takes an option value (string); consent can default to "no"', () => {
+    expect(
+      ATOM_PROP_SCHEMAS.radio.safeParse({
+        name: 'consent', required: true, defaultValue: 'no',
+        options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }],
+      }).success,
+    ).toBe(true);
+  });
+  test('date default must be ISO YYYY-MM-DD', () => {
+    expect(ATOM_PROP_SCHEMAS.date.safeParse({ name: 'x', defaultValue: '2026-08-24' }).success).toBe(true);
+    expect(ATOM_PROP_SCHEMAS.date.safeParse({ name: 'x', defaultValue: '24/08/2026' }).success).toBe(false);
+  });
+  test('dateRange default is { from, to }', () => {
+    expect(ATOM_PROP_SCHEMAS.dateRange.safeParse({ name: 'x', defaultValue: { from: '2026-01-01', to: '2026-12-31' } }).success).toBe(true);
+  });
+});

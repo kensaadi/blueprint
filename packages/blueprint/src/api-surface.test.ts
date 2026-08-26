@@ -43,6 +43,7 @@ const EXPECTED_CORE_VALUE_EXPORTS = [
   'ICON_REF_PROPS',
   'SUPPORTED_VERSIONS',
   'accessRuleSchema',
+  'collectFieldDefaults',
   'collectFieldRefs',
   'collectFormFieldNames',
   'collectMissingIconRefs',

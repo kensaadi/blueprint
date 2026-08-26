@@ -3619,6 +3619,9 @@
           "type": "string",
           "minLength": 1
         },
+        "defaultValue": {
+          "type": "string"
+        },
         "label": {
           "anyOf": [
             {
@@ -3979,6 +3982,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "string"
         },
         "label": {
           "anyOf": [
@@ -4388,6 +4394,10 @@
           "type": "string",
           "minLength": 1
         },
+        "defaultValue": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
         "label": {
           "anyOf": [
             {
@@ -4589,6 +4599,9 @@
           "type": "string",
           "minLength": 1
         },
+        "defaultValue": {
+          "type": "boolean"
+        },
         "label": {
           "anyOf": [
             {
@@ -4749,6 +4762,9 @@
           "type": "string",
           "minLength": 1
         },
+        "defaultValue": {
+          "type": "boolean"
+        },
         "label": {
           "anyOf": [
             {
@@ -4908,6 +4924,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "string"
         },
         "label": {
           "anyOf": [
@@ -5111,6 +5130,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "number"
         },
         "label": {
           "anyOf": [
@@ -5317,6 +5339,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "string"
         },
         "label": {
           "anyOf": [
@@ -5703,6 +5728,10 @@
           "type": "string",
           "minLength": 1
         },
+        "defaultValue": {
+          "type": "string",
+          "pattern": "^\\d{2}:\\d{2}$"
+        },
         "label": {
           "anyOf": [
             {
@@ -5904,6 +5933,9 @@
           "type": "string",
           "minLength": 1
         },
+        "defaultValue": {
+          "type": "string"
+        },
         "label": {
           "anyOf": [
             {
@@ -6096,6 +6128,20 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "to": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            }
+          },
+          "additionalProperties": false
         },
         "label": {
           "anyOf": [
@@ -6297,6 +6343,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "string"
         },
         "label": {
           "anyOf": [
@@ -6704,6 +6753,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "defaultValue": {
+          "type": "string"
         },
         "label": {
           "anyOf": [
